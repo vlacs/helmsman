@@ -9,7 +9,7 @@
     []))
 
 (defn strip-children-routes
-  [& children]
+  [children]
   (if (empty? children) nil
     (into [] (map #(dissoc % :routes) children))))
 
@@ -23,52 +23,39 @@
           (-> (:routes ~desc)
               ~@middlewares)))
 
-(defn apply-children
-  [desc & children]
-  (if (empty? children)
-    desc
-    (-> desc
-        (assoc :routes 
-               (routes
-                 (apply-context (:uri desc) 
-                                (apply get-children-routes children))
-                 (:routes desc)))
-        (assoc :children (into (get desc :children) (apply strip-children-routes children))))))
+(defn- apply-children-to-desc
+  [desc children]
+  (-> desc
+      (assoc :routes
+             (routes
+               (apply-context (:uri desc)
+                              (get-children-routes children))
+               (:routes desc)))
+      (assoc :children (into (get desc :children) (strip-children-routes children)))))
 
-(defn apply-meta
+(defn add-children
+  ([desc child-item & children]
+   ;;; Child item could be a single child or a vector/list/seq of children.
+   (apply-children-to-desc desc                          
+                           (if (empty? children)
+                             (if (vector? child-item)
+                               child-item
+                               [child-item])
+                             (cons child-item children)))))
+
+(defn add-meta
   [desc meta-map]
   (merge desc meta-map))
 
 (defmacro desc-route
   ([route-method route-uri route-fn & transforms]
-   `(->
-      (let [route# (make-route ~route-method ~route-uri ~route-fn)]
-        {:routes route# :uri ~route-uri :children []})
-      ~@transforms)))
+   `(-> {:routes (make-route ~route-method ~route-uri ~route-fn)
+         :uri ~route-uri
+         :children []}
+        ~@transforms)))
 
 (defn has-children?
   [desc]
   (if (empty? (:children desc))
     false true))
 
-(defn get-first-child
-  [desc]
-  (first (:children desc)))
-
-(defn drop-first-child
-  "No, no, this isn't as bad as it sounds!
-  We want to remove the child we're about to step into so we don't step into
-  it again. This is a 'working' structure and by the time we are done should
-  be completely empty."
-  [desc]
-  (assoc desc :children (rest (:children desc))))
-
-(defn make-some-routes
-  []
-  (desc-route :get "/foo" "Hello World."
-              (apply-meta {:hello :world})
-              (apply-children (desc-route :get "/bar" "Another world."
-                                          (apply-meta {:some :more-meta-data}))
-                              (desc-route :get "/pineapple" "Yummie fruit!"
-                                          (apply-meta {:fruit :citrus :name "Tasty pineapple"})))
-              (apply-middleware (wrap-params))))
