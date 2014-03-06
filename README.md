@@ -34,7 +34,8 @@ reflect data about these routes.
 
 
 It's also worth noting that all routes have 3 (and only 3) attributes or
-arguments if you will. ```clojure [:http-method "/some/compojure/uri" some-handler-fn]```
+arguments if you will. ```clojure
+[:http-method "/some/compojure/uri" some-handler-fn]```
 
 
 TODO: Add usage for middleware and contexts.
