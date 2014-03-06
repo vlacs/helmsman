@@ -16,8 +16,7 @@ You define a simple website like so!
 ```
 
 
-This creates three different routes: ```/``` ```/foobar``` and
-```/foobar/baz/:something```
+This creates three different routes: ```/``` ```/foobar``` and ``` /foobar/baz/:something ```
 
 
 TODO: Add more usage.
