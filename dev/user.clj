@@ -2,7 +2,9 @@
   (:require [clojure.tools.namespace.repl :refer [refresh refresh-all]]
             [clojure.pprint :refer [pprint]]
             [clojure.repl :refer :all]
-            [helmsman :as h]))
+            [ring.mock.request :refer [request]]
+            [helmsman :as h]
+            [helmsman-test :as ht]))
 
 (def test-data
   [[:any "/" (constantly "A redirect!")]

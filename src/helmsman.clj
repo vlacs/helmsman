@@ -1,5 +1,6 @@
 (ns helmsman
-  (:require [compojure.core :as compojure]
+  (:require [compojure.core]
+            [compojure.handler]
             [taoensso.timbre :as timbre]
             [helmsman.tree :as tree]))
 (timbre/refer-timbre)
@@ -11,5 +12,7 @@
     (let [new-state (tree/process-current state)
           next-item-state (tree/next-item new-state)]
       (if (nil? next-item-state)
-        (compojure/routes (tree/flatten-routes new-state))
+        (apply
+          compojure.core/routes
+          (tree/flatten-routes new-state))
         (recur next-item-state)))))

@@ -9,41 +9,56 @@
     :put :delete :trace
     :options :connect :patch})
 
-;;; What kind of object do we have?
 (defn http-method?
+  "Returns true if the provided argument is a http method."
   [method]
   (contains? http-methods method))
 
 (defn any-http-method?
+  "Returns true if the method is :any, does not match any http-method like
+  (http-method?)"
   [method]
   (= method :any))
  
 (defn route?
+  "Returns true if the method is :any or a specific http method."
   [method]
   (or (http-method? method)
       (any-http-method? method)))
 
 (defn on-route?
+  "Assuming the zipper is sitting on the first element of the current vector,
+  the first node (the one we're on,) will be checked to see if this item
+  reflects that of a helmsman/compojure route."
   [zipper]
   (route? (zip/node zipper)))
 
 (defn context?
+  "Checks the argument to see if it's a :context"
   [method]
   (= method :context))
 
 (defn on-context?
+  "Assuming the zipper is sitting on the first element of the current vector,
+  the first node we're on will be checked to see if the item reflects a
+  helmsmen context which behaves identically as a compojure context."
   [zipper]
   (context? (zip/node zipper)))
 
 (defn middleware?
+  "Any method that is a fn is a middleware. Returns true if the agument is a fn."
   [method]
   (fn? method))
 
 (defn on-middleware?
+  "see on-route?
+  Returns true if the zipper is sitting on a middleware item."
   [zipper]
   (middleware? (zip/node zipper)))
 
 (defn flatten-routes
+  "Reduces the tree of handlers to a single level vector to be processed by
+  compojure.core/routes"
   [trio-map]
   (flatten (zip/root (:routes trio-map))))
 
@@ -73,10 +88,6 @@
     (if (>= c node-count)
       nodes
       (recur (inc c) (zip/next z) (conj nodes (zip/node z))))))
-
-(defn processing-complete?
-  [trio-map]
-  (zip/end? (:loc trio-map)))
 
 (defn extract-route
   "This makes the assumption that we're sitting on the first node of a route
