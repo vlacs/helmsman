@@ -1,0 +1,43 @@
+Psuedo code for parsing vector route tree.
+
+Things we need for each loop itt.
+    - Top level handler (a fn). (This could exist inside current level handlers.)
+        - Remove this one.
+    - Current level handlers (vector of vectors of handler fns).
+    - current uri vector (vector of strings)
+    - current zipper location
+
+Have the zipper go to the next node until a non-vector node is encountered.
+    - TODO: Revise this, we need the first node of a vector to be encountered
+      as opposed to any non-vector node which could be problematic in case of
+      a problem.
+
+If the current zipper's node is a:
+    - keyword
+        - Example: [:get "/" some-handler]
+        - find out what http method we're using.
+        - second zipper node will be a relative URI, a string.
+        - third zipper node will be this route's handler, a fn.
+        - Subsequent nodes at the same level MUST be either a vector or a fn.
+    - fn
+        - Execute the fn while inserting the handler as the first fn argument
+          then continue adding remaining arguments after.
+        - fn should merge the current level handlers to execute the middleware
+          on a single handler.
+    - vector
+        - Is a list of routes nested inside another, just step in with a blank
+          uri and level handler vector. As a result, starting with middleware
+          does nothing.
+
+If there are no nodes to the right, we're going up a level.
+    - Remove the last uri string from the uri vector.
+    - Merge current level handlers into the next level handler(s).
+    - Continue moving up the zipper until we have a node to the right.
+        - If the end? is reached, we're done. Return the final handler.
+
+
+Pulling navigation data.
+
+Loop through the vector tree using clojure.zip/next and vector-zip and look for
+required meta data on every node while keeping track of the current uri heirarchy
+to reproduce uris for the navigation list.
