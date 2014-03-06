@@ -2,8 +2,7 @@
   (:require [clojure.tools.namespace.repl :refer [refresh refresh-all]]
             [clojure.pprint :refer [pprint]]
             [clojure.repl :refer :all]
-            [plumber.core :as plumber]
-            ))
+            [helmsman :as h]))
 
 (def test-data
   [[:any "/" (constantly "A redirect!")]

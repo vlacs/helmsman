@@ -1,7 +1,7 @@
-(ns plumber.core
+(ns helmsman
   (:require [compojure.core :as compojure]
             [taoensso.timbre :as timbre]
-            [plumber.tree :as tree]))
+            [helmsman.tree :as tree]))
 (timbre/refer-timbre)
 
 ;;; Creates a handler from the description data structure.

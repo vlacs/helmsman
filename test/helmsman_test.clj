@@ -1,6 +1,6 @@
-(ns plumber.core-test
+(ns helmsman-test
   (:require [clojure.test :refer :all]
-            [plumber.core :refer :all]))
+            [helmsman :refer :all]))
 
 (deftest a-test
   (testing "FIXME, I fail."
