@@ -52,6 +52,20 @@
    (request :get "/foo/baz")
    (request :get "/foo/baz/test2")])
 
+(def alt-many-nested-definition
+  [[:any "/" default-handler
+    [:any "/foo" default-handler
+     [:any "/bar" default-handler
+      [:any "/testing" default-handler]]]]
+   [:any "/api" default-handler]])
+
+(def valid-requests-alt-many-nested
+  [(request :get "/")
+   (request :get "/foo")
+   (request :get "/foo/bar")
+   (request :get "/foo/bar/testing")
+   (request :get "/api")])
+
 (defn test-requests-against-handler
   [handler requests]
   (doseq [r requests]
@@ -73,5 +87,9 @@
   (testing "Many nested definition"
     (test-requests-against-handler
       (compile-routes many-nested-definition)
-      valid-requests-many-nested)))
+      valid-requests-many-nested))
+  (testing "Alternate many nested definition"
+    (test-requests-against-handler
+      (compile-routes alt-many-nested-definition)
+      valid-requests-alt-many-nested)))
 

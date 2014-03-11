@@ -136,8 +136,13 @@
     route-fn))
 
 (defn assemble-uri
+  "This fn puts together a uri from two parts. It also strips out all double slashes
+  which is a result from constructing nested URIs and not enforcing empty URIs for
+  slash-only uris."
   [base-uri-vector current-uri]
-  (str (apply str base-uri-vector) current-uri))
+  (clojure.string/replace 
+    (str (apply str base-uri-vector) current-uri)
+    #"//" "/"))
 
 (defn realize-uri
   "Creates a full URI to use for oh so many things."
@@ -200,12 +205,9 @@
     (throw (Exception. "nil zipper")))
   (let [new-zipper
         (if (zipper-level-empty? loc)
-          (do
-            (append-move loc item))
-          (do
-            (insert-right-move loc item)))]
-    new-zipper
-    ))
+          (append-move loc item)
+          (insert-right-move loc item))]
+    new-zipper))
 
 (defn down
   "Moves down in both zippers while creating deeper levels on the working-routes
@@ -246,7 +248,6 @@
   ([trio-map]
    (when (nil? trio-map)
      (throw (Exception. "trio-map can not be nil")))
-   (debug "Finding next item...")
    (loop [state trio-map]
      (let [loc (:loc state)
            routes (:routes state)
@@ -254,29 +255,23 @@
 
        (if (vector? (zip/node loc))
          ;;; We can step into it and call it a day.
-         (do
-           (debug "Found next item.")
-           (down state))
+         (down state)
 
          ;;; Otherwise we need to go right or up.
          ;;; Can we go right?
          (if-let [zip-right (zip/right loc)]
-           (do
-             (recur (assoc state :loc zip-right)))
+           (recur (assoc state :loc zip-right))
 
            ;;; Since we can't move right, we must go up the tree until we can
            ;;; move right. If we reach the top of the tree with no nodes to the
            ;;; right, we're done.
 
            (if (zip/up loc)
-             (do
-               (let [new-state (up state)]
-                 ;;; We remove the last vector we were on so we don't try to drive
-                 ;;; back into it again when we loop through the structure again.
-                 (recur (assoc new-state :loc (zip/replace (:loc new-state) nil)))))
-             (do
-               (debug "There is no next item. We're done.")
-               nil))))))))
+             (let [new-state (up state)]
+               ;;; We remove the last vector we were on so we don't try to drive
+               ;;; back into it again when we loop through the structure again.
+               (recur (assoc new-state :loc (zip/replace (:loc new-state) nil))))
+               nil)))))))
 
 (defn process-route
   [trio-map]
