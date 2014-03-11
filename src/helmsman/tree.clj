@@ -1,60 +1,28 @@
 (ns helmsman.tree
   (:require [clojure.zip :as zip]
             [taoensso.timbre :as timbre]
-            [compojure.core :as compojure]))
+            [helmsman.routes :as routes]))
 (timbre/refer-timbre)
-
-(def http-methods
-  #{:get :head :post
-    :put :delete :trace
-    :options :connect :patch})
-
-(defn http-method?
-  "Returns true if the provided argument is a http method."
-  [method]
-  (contains? http-methods method))
-
-(defn any-http-method?
-  "Returns true if the method is :any, does not match any http-method like
-  (http-method?)"
-  [method]
-  (= method :any))
- 
-(defn route?
-  "Returns true if the method is :any or a specific http method."
-  [method]
-  (or (http-method? method)
-      (any-http-method? method)))
 
 (defn on-route?
   "Assuming the zipper is sitting on the first element of the current vector,
   the first node (the one we're on,) will be checked to see if this item
   reflects that of a helmsman/compojure route."
   [zipper]
-  (route? (zip/node zipper)))
-
-(defn context?
-  "Checks the argument to see if it's a :context"
-  [method]
-  (= method :context))
+  (routes/route? (zip/node zipper)))
 
 (defn on-context?
   "Assuming the zipper is sitting on the first element of the current vector,
   the first node we're on will be checked to see if the item reflects a
   helmsmen context which behaves identically as a compojure context."
   [zipper]
-  (context? (zip/node zipper)))
-
-(defn middleware?
-  "Any method that is a fn is a middleware. Returns true if the agument is a fn."
-  [method]
-  (fn? method))
+  (routes/context? (zip/node zipper)))
 
 (defn on-middleware?
   "see on-route?
   Returns true if the zipper is sitting on a middleware item."
   [zipper]
-  (middleware? (zip/node zipper)))
+  (routes/middleware? (zip/node zipper)))
 
 (defn flatten-routes
   "Reduces the tree of handlers to a single level vector to be processed by
@@ -63,7 +31,7 @@
   (flatten (zip/root (:routes trio-map))))
 
 (defn first-item
-  "Moves the zipper to the very first item item (route) that is encountered.
+  "Moves the zipper to the very first item (route) that is encountered.
   The zipper is automatically moved to the root to start."
   [loc]
   (loop [zipper loc]
@@ -125,42 +93,6 @@
 (defn ordered-trio
   [trio-hash]
   (vec (map #(% trio-hash) [:loc :routes :uri])))
-
-(defn cons-route
-  [method uri route-fn]
-  (compojure/make-route
-    ;;; rewrite :any to nil for compojure.
-    (if (any-http-method? method)
-      nil method)
-    uri
-    route-fn))
-
-(defn assemble-uri
-  "This fn puts together a uri from two parts. It also strips out all double slashes
-  which is a result from constructing nested URIs and not enforcing empty URIs for
-  slash-only uris."
-  [base-uri-vector current-uri]
-  (clojure.string/replace 
-    (str (apply str base-uri-vector) current-uri)
-    #"//" "/"))
-
-(defn realize-uri
-  "Creates a full URI to use for oh so many things."
-  [base-uri-vector current-route]
-  (assemble-uri base-uri-vector (second current-route)))
-
-(defn realize-route
-  "Running this fn on the uri vector and current-route alters the route definition
-  to make the URI reflect the full URI within the entire definition then returns the
-  revised route definition which can be structed by compojure."
-  [base-uri-vector current-route]
-  (assoc current-route 1 (realize-uri base-uri-vector current-route)))
-
-(defn assemble-route
-  "Pulls information about the current route, incorporates the full URI by 'realizing'
-  it and returns a compojure route."
-  [loc base-uri]
-  (apply cons-route (realize-route base-uri (extract-route loc))))
 
 (defn zipper-level-empty?
   [loc]
@@ -274,8 +206,9 @@
                nil)))))))
 
 (defn process-route
+  "Handles a route inside the routes definition."
   [trio-map]
-  (let [new-route (assemble-route (:loc trio-map) (:uri trio-map))
+  (let [new-route (routes/assemble-route (extract-route (:loc trio-map)) (:uri trio-map))
         new-working-routes (append-route (:routes trio-map) new-route)
         new-base-uri (conj
                        (:uri trio-map)
@@ -286,6 +219,7 @@
       new-base-uri)))
 
 (defn process-context
+  "Handles a context and uri without a route in the routes definition."
   [trio-map]
   (let [definition-zipper (:loc trio-map)
         working-routes (append-branch-move (:routes trio-map))
@@ -293,7 +227,16 @@
                        (second (zip/node (zip/up definition-zipper))))]
     (make-trio definition-zipper working-routes base-uri)))
 
+(defn process-middleware
+  "Handles the processing of a middleware in the routes definition."
+  [trio-map]
+  ;;; This is a placeholder while this gets implemented.
+  trio-map)
+
 (defn process-current
+  "Processes the current item that the location zipper is sitting on.
+  Note: It is expected that the zipper is sitting on the first node of
+  the route definition."
   [trio-map]
   (let [definition-zipper (:loc trio-map)]
     (cond
