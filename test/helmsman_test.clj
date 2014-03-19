@@ -9,13 +9,8 @@
 (defn default-middleware
   "Adds an item to the request."
   [handler item-name value]
-  (println "default-middleware called.")
   (fn [request]
-    (println "default-middleware fn called.")
-    (handler (assoc
-               request
-               item-name
-               value))))
+    (handler (assoc request item-name value))))
 
 (def default-output 
   {:status 200
@@ -33,7 +28,6 @@
 
 (defn middleware-handler
   [request]
-  (println (prn-str request))
   (assoc middleware-output-part
          :body (middleware-req-item
                  request)))

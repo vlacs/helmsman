@@ -35,8 +35,11 @@
   (vec (flatten (zip/node routes-zipper))))
 
 (defn replace-current-routes
+  "Keep in mind that while we're working on a route (particularly with 
+  middleware) we're replacing everything, which includes an empty vector
+  that represents the location of the next potential child."
   [routes-zipper new-item]
-  (zip/replace routes-zipper [new-item]))
+  (zip/replace routes-zipper [new-item []]))
 
 (defn first-item
   "Moves the zipper to the very first item (route) that is encountered.
@@ -91,7 +94,7 @@
   [loc]
   (let [i (zip/rights loc)]
     (if (nil? i)
-      i (vec i))))
+      [] (vec i))))
 
 (defn route-has-children?
   [loc]
@@ -268,19 +271,23 @@
   "Handles the processing of a middleware in the routes definition."
   [trio-map]
   (let [middlware-fn (extract-middleware-fn (:loc trio-map))
-        middleware-args (extract-middleware-args (:loc trio-map))]
-    (debug middlware-fn middleware-args)
+        middleware-args (extract-middleware-args (:loc trio-map))
+        route-level-zipper (zip/up (:routes trio-map))]
+    ;;; BEWARE! The routes zipper is not sitting on the level that we're working
+    ;;; with. We must go up, do some stuff, then drop back in.
     (make-trio
       (zip/replace (zip/up (:loc trio-map)) nil)
-      (replace-current-routes
-        (:routes trio-map)
-        (apply
-          (partial
-            middlware-fn
-            (routes/combine
-              (flatten-current-routes
-                (:routes trio-map))))
-          middleware-args))
+      (zip/right
+        (zip/down
+          (replace-current-routes
+            route-level-zipper
+            (apply
+              (partial
+                middlware-fn
+                (apply routes/combine
+                       (flatten-current-routes
+                         route-level-zipper)))
+              middleware-args))))
       (:uri trio-map))))
 
 (defn process-current

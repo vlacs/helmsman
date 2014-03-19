@@ -75,4 +75,5 @@
  
 (defn combine
   [& routes-vec]
-  (apply compojure/routes routes-vec))
+  (apply compojure/routes (vec routes-vec)))
+
