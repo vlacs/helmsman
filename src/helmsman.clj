@@ -2,7 +2,8 @@
   (:require [compojure.core]
             [compojure.handler]
             [taoensso.timbre :as timbre]
-            [helmsman.tree :as tree]))
+            [helmsman.tree :as tree]
+            [helmsman.routes :as routes]))
 (timbre/refer-timbre)
 
 ;;; Creates a handler from the description data structure.
@@ -13,6 +14,7 @@
           next-item-state (tree/next-item new-state)]
       (if (nil? next-item-state)
         (apply
-          compojure.core/routes
-          (tree/flatten-routes new-state))
+          routes/combine
+          (tree/flatten-all-routes new-state))
         (recur next-item-state)))))
+

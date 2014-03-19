@@ -1,4 +1,4 @@
-(defproject helmsman "0.1.0"
+(defproject helmsman "0.1.1"
   :description "This is a library for describing the structure of a web appliction.
                This way, we have uris and data associated directly with routes.
                This is nice for generating navigation or applying middleware to

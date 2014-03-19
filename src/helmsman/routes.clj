@@ -1,5 +1,8 @@
 (ns helmsman.routes
-  (:require [compojure.core :as compojure]))
+  (:require [compojure.core :as compojure]
+            [taoensso.timbre :as timbre]))
+
+(timbre/refer-timbre)
 
 (def http-methods
   #{:get :head :post
@@ -47,6 +50,7 @@
   which is a result from constructing nested URIs and not enforcing empty URIs for
   slash-only uris."
   [base-uri-vector current-uri]
+  ;;; TODO: Eliminate trailing slashes in the future.
   (clojure.string/replace 
     (str (apply str base-uri-vector) current-uri)
     #"//" "/"))
@@ -69,3 +73,6 @@
   [route base-uri]
   (apply cons-route (realize-route base-uri route)))
  
+(defn combine
+  [& routes-vec]
+  (apply compojure/routes routes-vec))

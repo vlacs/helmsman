@@ -24,11 +24,19 @@
   [zipper]
   (routes/middleware? (zip/node zipper)))
 
-(defn flatten-routes
+(defn flatten-all-routes
   "Reduces the tree of handlers to a single level vector to be processed by
   compojure.core/routes"
   [trio-map]
-  (flatten (zip/root (:routes trio-map))))
+  (vec (flatten (zip/root (:routes trio-map)))))
+
+(defn flatten-current-routes
+  [routes-zipper]
+  (vec (flatten (zip/node routes-zipper))))
+
+(defn replace-current-routes
+  [routes-zipper new-item]
+  (zip/replace routes-zipper [new-item]))
 
 (defn first-item
   "Moves the zipper to the very first item (route) that is encountered.
@@ -68,6 +76,23 @@
   ;;; TODO: Ensure that we're sitting on a route.
   (next-nodes loc 3))
 
+(defn extract-middleware-fn
+  "This is only a call to zip/node. We're running under the assumption that the
+  zipper is always sitting on the left-most node on this level. This fn call is
+  just to reinforce the fact that we're making this assumption."
+  [loc]
+  (zip/node loc))
+
+(defn extract-middleware-args
+  "Much like extract-route, this assumes that we're sitting on the first node of
+  the middleware. Somewhere between extract-route and extract-middleware-fn. This
+  is yet another example of reinforcing the fact that we're making the assumption
+  that the zipper will always be sitting on the left-most item of this level."
+  [loc]
+  (let [i (zip/rights loc)]
+    (if (nil? i)
+      i (vec i))))
+
 (defn route-has-children?
   [loc]
   (> (count (zip/node (zip/up loc))) 3))
@@ -80,10 +105,14 @@
   (zip/down (zip/append-child loc item)))
 
 (defn make-trio
+  "loop-recur is utilized to traverse the zippers and working uri. This puts it into
+  an easy to use map for us to pass around."
   [loc rt uri]
   {:loc loc :routes rt :uri uri})
 
 (defn make-new-trio
+  "see: make-trio
+  This makes an initial trio from a definition vector tree."
   [definition]
   (make-trio
     (first-item (zip/vector-zip definition))
@@ -91,10 +120,16 @@
     []))
 
 (defn ordered-trio
+  "see: make-trio
+  Some fns require the trio to be individual arguments in fns, this preps the
+  trio to be apply(ed) to a fn. Returns a vector representation of the map in
+  the order of definition zipper, routes zipper, uri vector."
   [trio-hash]
   (vec (map #(% trio-hash) [:loc :routes :uri])))
 
 (defn zipper-level-empty?
+  "Checks to see if this zipper level is completely empty.
+  (Cannot move left, right, or down. We don't care if we can move up in this fn.)"
   [loc]
   (not (or (zip/down loc)
            (zip/left loc)
@@ -121,11 +156,13 @@
         added-branch))))
 
 (defn append-route
+  "Appends a route to the route zipper at its current location."
   [loc route]
-  (let [r (zip/append-child loc route)]
-    r))
+  (zip/append-child loc route))
 
 (defn insert-right-move
+  "Inserts a node to the right of the current zipper location and moves the zipper to that
+  new node."
   [loc item]
   (zip/right (zip/insert-right loc item)))
 
@@ -230,8 +267,21 @@
 (defn process-middleware
   "Handles the processing of a middleware in the routes definition."
   [trio-map]
-  ;;; This is a placeholder while this gets implemented.
-  trio-map)
+  (let [middlware-fn (extract-middleware-fn (:loc trio-map))
+        middleware-args (extract-middleware-args (:loc trio-map))]
+    (debug middlware-fn middleware-args)
+    (make-trio
+      (zip/replace (zip/up (:loc trio-map)) nil)
+      (replace-current-routes
+        (:routes trio-map)
+        (apply
+          (partial
+            middlware-fn
+            (routes/combine
+              (flatten-current-routes
+                (:routes trio-map))))
+          middleware-args))
+      (:uri trio-map))))
 
 (defn process-current
   "Processes the current item that the location zipper is sitting on.
@@ -242,8 +292,9 @@
     (cond
       (on-route? definition-zipper) (process-route trio-map)
       (on-context? definition-zipper) (process-context trio-map)
-      ;;; TODO: Setup middleware.
-      ;(on-middleware?) (process-middleware trio-map)
+      (on-middleware? definition-zipper) (process-middleware trio-map)
+
+      ;;; TODO: Think up a better debug message. Maybe include some data too.
       :else (debug "Bolding doing what we've never done before!")
       )))
 
