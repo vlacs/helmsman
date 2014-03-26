@@ -39,7 +39,7 @@
   middleware) we're replacing everything, which includes an empty vector
   that represents the location of the next potential child."
   [routes-zipper new-item]
-  (zip/replace routes-zipper [new-item []]))
+  (zip/replace routes-zipper [new-item]))
 
 (defn first-item
   "Moves the zipper to the very first item (route) that is encountered.
@@ -151,7 +151,9 @@
   (when (nil? loc)
     (throw (Exception. "zipper can not be nil.")))
   (when (not (zip/branch? loc))
-    (throw (Exception. "loc not on branch. Must append to a branch.")))
+    (throw (Exception. (str "loc not on branch. Must append to a branch.\n"
+                            (prn-str loc)
+                            ))))
   (zip/rightmost
     (let [added-branch (zip/append-child loc [])]
       (if (not (empty-branch? added-branch))
@@ -189,7 +191,6 @@
   ([trio-map]
    (apply down (ordered-trio trio-map)))
   ([zipper working-routes uri]
-   
    (let [new-working-routes (append-branch-move working-routes)]
      (make-trio
        (zip/down zipper)
@@ -225,7 +226,7 @@
            routes (:routes state)
            uri (:uri state)]
 
-       (if (vector? (zip/node loc))
+       (if (and (zip/branch? loc) (zip/down loc))
          ;;; We can step into it and call it a day.
          (down state)
 
@@ -272,22 +273,21 @@
   [trio-map]
   (let [middlware-fn (extract-middleware-fn (:loc trio-map))
         middleware-args (extract-middleware-args (:loc trio-map))
-        route-level-zipper (zip/up (:routes trio-map))]
+        route-level-zipper (zip/up (:routes trio-map))
+        flattened-routes (flatten-current-routes route-level-zipper)]
     ;;; BEWARE! The routes zipper is not sitting on the level that we're working
     ;;; with. We must go up, do some stuff, then drop back in.
     (make-trio
-      (zip/replace (zip/up (:loc trio-map)) nil)
-      (zip/right
-        (zip/down
-          (replace-current-routes
-            route-level-zipper
-            (apply
-              (partial
-                middlware-fn
-                (apply routes/combine
-                       (flatten-current-routes
-                         route-level-zipper)))
-              middleware-args))))
+      (zip/replace (zip/up (:loc trio-map)) [])
+      (replace-current-routes
+        route-level-zipper
+        (apply
+          (partial
+            middlware-fn
+            (apply routes/combine
+                   (flatten-current-routes
+                     route-level-zipper)))
+          middleware-args))
       (:uri trio-map))))
 
 (defn process-current

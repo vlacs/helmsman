@@ -5,6 +5,7 @@
 
 (def middleware-req-item :test-item)
 (def middleware-req-val "Apple Pie.")
+(def middleware-req-val-alt "Blueberry pie.")
 
 (defn default-middleware
   "Adds an item to the request."
@@ -23,6 +24,9 @@
 
 (def middleware-output-expectation
   (assoc middleware-output-part :body middleware-req-val))
+
+(def middleware-output-expectation-alt
+  (assoc middleware-output-part :body middleware-req-val-alt))
 
 (def default-handler (constantly default-output))
 
@@ -97,6 +101,57 @@
 (def single-middleware-valid-requests
   [(request :get "/")])
 
+(def basic-middleware-definition
+  [[:any "/" middleware-handler]
+   [:any "/foo" middleware-handler]
+   [:any "/bar" middleware-handler]
+   [default-middleware
+    middleware-req-item
+    middleware-req-val]])
+
+(def basic-middleware-valid-requests
+  [(request :get "/")
+   (request :get "/foo")
+   (request :get "/bar")])
+
+(def nested-middleware-definition
+  [[:get "/" middleware-handler
+   [:get "/foo" middleware-handler
+    [:get "/bar" middleware-handler
+     [:get "/testing" middleware-handler]]]]
+   [default-middleware
+    middleware-req-item
+    middleware-req-val]])
+
+(def nested-middleware-valid-responses
+  [(request :get "/")
+   (request :get "/foo")
+   (request :get "/foo/bar")
+   (request :get "/foo/bar/testing")])
+
+(def complex-middleware-definition
+  [[:get "/" middleware-handler
+    [default-middleware
+     middleware-req-item
+     middleware-req-val]]
+   [:get "/echo" middleware-handler
+    [:get "/echo" middleware-handler
+     [default-middleware
+      middleware-req-item
+      middleware-req-val]]]
+   [:get "/foo" middleware-handler]
+   [default-middleware
+    middleware-req-item
+    middleware-req-val-alt]])
+
+(def complex-middleware-requests
+  [(request :get "/")
+   (request :get "/echo/echo")])
+
+(def complex-middleware-requests-alt
+  [(request :get "/echo")
+   (request :get "/foo")])
+
 (defn test-requests-against-handler
   [handler requests expected-output]
   (doseq [r requests]
@@ -134,5 +189,25 @@
     (test-requests-against-handler
       (compile-routes single-middleware-definition)
       single-middleware-valid-requests
-      middleware-output-expectation)))
+      middleware-output-expectation))
+  (testing "Testing basic definition with middleware."
+    (test-requests-against-handler
+      (compile-routes basic-middleware-definition)
+      basic-middleware-valid-requests
+      middleware-output-expectation))
+  (testing "Testing nested definition with middleware."
+    (test-requests-against-handler
+      (compile-routes nested-middleware-definition)
+      nested-middleware-valid-responses
+      middleware-output-expectation))
+  (testing "Testing 'complex' routes with mixed middleware."
+    (let [compiled-routes (compile-routes complex-middleware-definition)]      
+      (test-requests-against-handler
+        compiled-routes
+        complex-middleware-requests
+        middleware-output-expectation)
+      (test-requests-against-handler
+        compiled-routes
+        complex-middleware-requests-alt
+        middleware-output-expectation-alt))))
 
