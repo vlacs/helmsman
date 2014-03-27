@@ -4,35 +4,13 @@
             [clojure.repl :refer :all]
             [ring.mock.request :refer [request]]
             [helmsman :as h]
-            [helmsman-test :as ht]))
-
-(def test-data
-  [[:any "/" (constantly "A redirect!")]
-
-   ^{:main-menu true
-     :main-menu-weight 50
-     :name "Home page"
-     :desc "Aspire onboarding page."}
-   [:get "/welcome" (constantly "Onboarding")]
-
-   ^{:main-menu true
-     :main-menu-weight 50
-     :name "Administration"
-     :desc "Where Aspire gets administered."}
-   [:get "/admin" (constantly "Administration")
-    [:get "/debug" #(prn-str %)]]
-
-   [:context "/config"
-    [:put "/key/:key" (constantly "Config key")]
-    [:post "/page/:page" (constantly "Config page")]]
-
-   [:any "/logout"  (constantly "Nothing here but us chickens.")]])
+            [helmsman-ring-test :as hrt]))
 
 (def system nil)
 
 (defn make-app
   []
-  {:test-data test-data})
+  {})
 
 (defn init
   "Sets up a basic state for us to work with."

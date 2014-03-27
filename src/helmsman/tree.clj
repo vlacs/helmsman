@@ -18,6 +18,13 @@
   [zipper]
   (routes/context? (zip/node zipper)))
 
+(defn on-uri?
+  "Assuming the zipper is sitting on the first element of the current vector,
+  the first node will be checked to see if we're sitting on a node that supports
+  URIs such as contexts and routes."
+  [zipper]
+  (or (on-route? zipper) (on-context? zipper)))
+
 (defn on-middleware?
   "see on-route?
   Returns true if the zipper is sitting on a middleware item."
@@ -305,3 +312,22 @@
       :else (debug "Bolding doing what we've never done before!")
       )))
 
+(defn gather-meta
+  [site-structure]
+  (loop [state (make-new-trio site-structure)
+         nav-set #{}]
+    (if (nil? state)
+      nav-set
+      (let [processed-state (process-current state)
+            loc (:loc processed-state)]
+        (recur
+          (next-item processed-state)
+          (if
+            (on-uri? loc)
+            (conj
+              nav-set
+              (assoc
+                (meta (zip/node (zip/up loc)))
+                :uri-path
+                (:uri processed-state)))
+            nav-set))))))

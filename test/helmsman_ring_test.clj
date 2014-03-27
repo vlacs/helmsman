@@ -1,4 +1,4 @@
-(ns helmsman-test
+(ns helmsman-ring-test
   (:require [clojure.test :refer :all]
             [helmsman :refer :all]
             [ring.mock.request :refer [request]]))
