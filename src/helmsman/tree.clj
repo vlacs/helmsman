@@ -1,7 +1,8 @@
 (ns helmsman.tree
   (:require [clojure.zip :as zip]
             [taoensso.timbre :as timbre]
-            [helmsman.routes :as routes]))
+            [helmsman.routes :as routes]
+            [helmsman.uri :as uri]))
 (timbre/refer-timbre)
 
 (defn on-route?
@@ -86,6 +87,12 @@
   ;;; TODO: Ensure that we're sitting on a route.
   (next-nodes loc 3))
 
+(defn extract-uri
+  [loc]
+  (when (not (on-uri? loc))
+    (throw (Exception. "Can't extract URI from an item that doesn't support having a URI")))
+  (uri/path (zip/node (zip/right loc))))
+
 (defn extract-middleware-fn
   "This is only a call to zip/node. We're running under the assumption that the
   zipper is always sitting on the left-most node on this level. This fn call is
@@ -117,8 +124,8 @@
 (defn make-trio
   "loop-recur is utilized to traverse the zippers and working uri. This puts it into
   an easy to use map for us to pass around."
-  [loc rt uri]
-  {:loc loc :routes rt :uri uri})
+  [loc rt uri-vector]
+  {:loc loc :routes rt :uri uri-vector})
 
 (defn make-new-trio
   "see: make-trio
@@ -230,22 +237,17 @@
      (throw (Exception. "trio-map can not be nil")))
    (loop [state trio-map]
      (let [loc (:loc state)
-           routes (:routes state)
-           uri (:uri state)]
-
+           routes (:routes state)]
        (if (and (zip/branch? loc) (zip/down loc))
          ;;; We can step into it and call it a day.
          (down state)
-
          ;;; Otherwise we need to go right or up.
          ;;; Can we go right?
          (if-let [zip-right (zip/right loc)]
            (recur (assoc state :loc zip-right))
-
            ;;; Since we can't move right, we must go up the tree until we can
            ;;; move right. If we reach the top of the tree with no nodes to the
            ;;; right, we're done.
-
            (if (zip/up loc)
              (let [new-state (up state)]
                ;;; We remove the last vector we were on so we don't try to drive
@@ -256,11 +258,14 @@
 (defn process-route
   "Handles a route inside the routes definition."
   [trio-map]
-  (let [new-route (routes/assemble-route (extract-route (:loc trio-map)) (:uri trio-map))
-        new-working-routes (append-route (:routes trio-map) new-route)
-        new-base-uri (conj
+  (let [new-base-uri (conj
                        (:uri trio-map)
-                       (second (zip/node (zip/up (:loc trio-map)))))]
+                       (extract-uri (:loc trio-map)))
+        new-route (apply routes/cons-route
+                         (routes/rewrite-uri
+                           (extract-route (:loc trio-map))
+                           (uri/assemble new-base-uri)))
+        new-working-routes (append-route (:routes trio-map) new-route)]
     (make-trio
       (:loc trio-map)
       new-working-routes
@@ -272,7 +277,7 @@
   (let [definition-zipper (:loc trio-map)
         working-routes (append-branch-move (:routes trio-map))
         base-uri (conj (:uri trio-map)
-                       (second (zip/node (zip/up definition-zipper))))]
+                       (extract-uri definition-zipper))]
     (make-trio definition-zipper working-routes base-uri)))
 
 (defn process-middleware
@@ -329,5 +334,5 @@
               (assoc
                 (meta (zip/node (zip/up loc)))
                 :uri-path
-                (:uri processed-state)))
+                (uri/assemble (:uri processed-state))))
             nav-set))))))
