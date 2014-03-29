@@ -9,6 +9,7 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [compojure "1.1.5"]
                  [ring "1.2.1"]
+                 [clout "1.1.0"]
                  [com.taoensso/timbre "3.0.1"]]
   :profiles {:dev {:source-paths ["dev"]
                    :dependencies [[org.clojure/tools.nrepl "0.2.3"]

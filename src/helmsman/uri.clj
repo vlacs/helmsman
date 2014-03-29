@@ -32,7 +32,14 @@
         singular-slashes)
     #"/+"))
 
+(defn normalize-path
+  "Converts a multi-level uri-path vector into a single level vector and
+  removes any empty items. This is useful for path navigation and uri
+  generation."
+  [uri-path]
+  (vec (filter #(not (empty? %1)) (flatten uri-path))))
+
 (defn assemble
   "Turns a uri path into a uri string."
   [uri-path]
-  (apply (partial str "/") (interpose "/" (vec (filter #(not (empty? %1)) (flatten uri-path))))))
+  (apply (partial str "/") (interpose "/" (normalize-path uri-path))))

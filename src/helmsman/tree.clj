@@ -2,7 +2,8 @@
   (:require [clojure.zip :as zip]
             [taoensso.timbre :as timbre]
             [helmsman.routes :as routes]
-            [helmsman.uri :as uri]))
+            [helmsman.uri :as uri]
+            [helmsman.middleware :as middleware]))
 (timbre/refer-timbre)
 
 (defn on-route?
@@ -261,10 +262,13 @@
   (let [new-base-uri (conj
                        (:uri trio-map)
                        (extract-uri (:loc trio-map)))
-        new-route (apply routes/cons-route
-                         (routes/rewrite-uri
-                           (extract-route (:loc trio-map))
-                           (uri/assemble new-base-uri)))
+        new-route (middleware/attach-meta
+                    (apply
+                      routes/cons-route
+                      (routes/rewrite-uri
+                        (extract-route (:loc trio-map))
+                        (uri/assemble new-base-uri)))
+                    (meta (zip/node (zip/up (:loc trio-map)))))
         new-working-routes (append-route (:routes trio-map) new-route)]
     (make-trio
       (:loc trio-map)
@@ -317,7 +321,8 @@
       :else (debug "Bolding doing what we've never done before!")
       )))
 
-(defn gather-meta
+(defn gather-all-meta
+  "Gets metadata about the helmsman definition."
   [site-structure]
   (loop [state (make-new-trio site-structure)
          nav-set #{}]
@@ -334,5 +339,5 @@
               (assoc
                 (meta (zip/node (zip/up loc)))
                 :uri-path
-                (uri/assemble (:uri processed-state))))
+                (uri/normalize-path (:uri processed-state))))
             nav-set))))))
