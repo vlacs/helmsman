@@ -52,6 +52,14 @@ function call and can be created like this:
 ```
 
 TODO: Make an example that ties all of this together.
+```clojure
+(helmsman/compile-routes [[:any "/" (constantly "Hello world!")]])
+```
+
+Would be the same as
+```clojure
+(compojure/routes (compojure/ANY "/" (constantly "Hello world!")))
+```
 
 ## License
 
