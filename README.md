@@ -43,8 +43,7 @@ like a route but with two arguments, like this:
   [:get "/testing2" some-other-handler]]
 ```
 
-Which would result in two routes: ```/some/path/testing``` and
-```some/path/testing1```.
+Which would result in two routes: /some/path/testing and /some/path/testing1.
 
 Any middleware that gets added as if the handler will be threaded (->) through the respective
 function call and can be created like this:
