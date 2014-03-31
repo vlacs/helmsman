@@ -61,6 +61,14 @@ Would be the same as
 (compojure/routes (compojure/ANY "/" (constantly "Hello world!")))
 ```
 
+Helmsman also supports serving up static files. We handle this exactly the same
+way that compojure does. For example, these two statements are analogous when
+using helmsman:
+```clojure
+(compojure.route/resources "/")
+[:resources "/"]
+```
+
 ## License
 
 Copyright VLACS© 2014
