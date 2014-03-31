@@ -1,6 +1,7 @@
 (ns helmsman.routes
   (:require [helmsman.uri :as uri]
             [compojure.core :as compojure]
+            [compojure.route]
             [taoensso.timbre :as timbre]))
 
 (timbre/refer-timbre)
@@ -36,7 +37,31 @@
   "Any method that is a fn is a middleware. Returns true if the agument is a fn."
   [method]
   (fn? method))
- 
+
+(defn resources?
+  "Checks to see if the argument is :static."
+  [method]
+  (= method :resources))
+
+(defn files?
+  "Checks to see if the argument is :files."
+  [method]
+  (= method :files))
+
+(defn not-found?
+  [method]
+  (= method :not-found))
+
+(defn cons-static
+  [static-fn path arg-seq]
+  (apply (partial static-fn path) arg-seq))
+
+(def cons-resources
+  (partial cons-static compojure.route/resources))
+
+(def cons-files
+  (partial cons-static compojure.route/files))
+
 (defn cons-route
   [method uri route-fn]
   (compojure/make-route

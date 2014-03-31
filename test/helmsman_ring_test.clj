@@ -157,6 +157,21 @@
   (doseq [r requests]
     (is (= (handler r) expected-output))))
 
+(defn test-requests-for-status-200
+  [handler requests]
+  (doseq [r requests]
+    (is (= (:status (handler r)) 200))))
+
+(def resources-definition
+  [[:get "/" {:status 404}]
+   [:resources "/"]
+   [:get "/foo" {:status 404}
+    [:resources "/bar"]]])
+
+(def resources-requests
+  [(request :get "/test-file.txt")
+   (request :get "/foo/bar/test-file.txt")])
+
 (deftest compiling-routes-test
   (testing "Testing single route definition"
     (test-requests-against-handler
@@ -210,4 +225,10 @@
         compiled-routes
         complex-middleware-requests-alt
         middleware-output-expectation-alt))))
+
+(deftest compile-resources-test
+  (testing "Testing mixed static handlers and static content."
+    (test-requests-for-status-200
+      (compile-routes resources-definition)
+      resources-requests)))
 

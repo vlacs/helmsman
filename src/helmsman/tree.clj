@@ -33,6 +33,18 @@
   [zipper]
   (routes/middleware? (zip/node zipper)))
 
+(defn on-resources?
+  "Checks to see if we're on a :resources directive. These are static files served
+  up from the classpath."
+  [zipper]
+  (routes/resources? (zip/node zipper)))
+
+(defn on-files?
+  "Checks to see if we're on a :files directive. These are static files served up
+  from any path on the current computer or server."
+  [zipper]
+  (routes/files? (zip/node zipper)))
+
 (defn flatten-all-routes
   "Reduces the tree of handlers to a single level vector to be processed by
   compojure.core/routes"
@@ -100,16 +112,6 @@
   just to reinforce the fact that we're making this assumption."
   [loc]
   (zip/node loc))
-
-(defn extract-middleware-args
-  "Much like extract-route, this assumes that we're sitting on the first node of
-  the middleware. Somewhere between extract-route and extract-middleware-fn. This
-  is yet another example of reinforcing the fact that we're making the assumption
-  that the zipper will always be sitting on the left-most item of this level."
-  [loc]
-  (let [i (zip/rights loc)]
-    (if (nil? i)
-      [] (vec i))))
 
 (defn route-has-children?
   [loc]
@@ -227,6 +229,11 @@
          (zip/up working-routes)))
      (vec (butlast uri)))))
 
+(defn rights-vec
+  [zipper]
+  (if-let [i (zip/rights zipper)]
+    (vec i) []))
+
 (defn next-item
   "As we move to the next item, we're moving our working-routes location as well.
   If the trio isn't returned and nil is, then there are no more items."
@@ -288,7 +295,7 @@
   "Handles the processing of a middleware in the routes definition."
   [trio-map]
   (let [middlware-fn (extract-middleware-fn (:loc trio-map))
-        middleware-args (extract-middleware-args (:loc trio-map))
+        middleware-args (rights-vec (:loc trio-map))
         route-level-zipper (zip/up (:routes trio-map))
         flattened-routes (flatten-current-routes route-level-zipper)]
     ;;; BEWARE! The routes zipper is not sitting on the level that we're working
@@ -306,6 +313,20 @@
           middleware-args))
       (:uri trio-map))))
 
+(defn process-static
+  [trio-map static-fn]
+  (let [contents (rights-vec (:loc trio-map))
+        uri (conj (:uri trio-map) (uri/path (first contents)))
+        opts (rest contents)]
+    (make-trio
+      (zip/replace (zip/up (:loc trio-map)) [])
+      (append-route (:routes trio-map)
+                    (static-fn
+                      (uri/assemble
+                        (uri/normalize-path uri))
+                      opts))
+      (:uri trio-map))))
+
 (defn process-current
   "Processes the current item that the location zipper is sitting on.
   Note: It is expected that the zipper is sitting on the first node of
@@ -316,6 +337,8 @@
       (on-route? definition-zipper) (process-route trio-map)
       (on-context? definition-zipper) (process-context trio-map)
       (on-middleware? definition-zipper) (process-middleware trio-map)
+      (on-resources? definition-zipper) (process-static trio-map routes/cons-resources)
+      (on-files? definition-zipper) (process-static trio-map routes/cons-files)
 
       ;;; TODO: Think up a better debug message. Maybe include some data too.
       :else (debug "Bolding doing what we've never done before!")
