@@ -4,6 +4,12 @@ A Clojure library design to let you compose Compojure routes and define the
 structure of your application at the same time as opposed to strictly building
 up just the routes alone.
 
+Here is the latest leiningen dependancy string for your project.clj file:
+
+```clojure
+[helmsman "0.1.4"]
+```
+
 TODO: More description!
 
 ## Usage
