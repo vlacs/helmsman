@@ -1,8 +1,7 @@
 # Helmsman
+<a title="By Steering_wheel_ship_1.png: Lidingo derivative work: Arnaud Ramey (Steering_wheel_ship_1.png) [CC-BY-SA-3.0 (http://creativecommons.org/licenses/by-sa/3.0) or GFDL (http://www.gnu.org/copyleft/fdl.html)], via Wikimedia Commons" href="http://commons.wikimedia.org/wiki/File%3ASteering_wheel_ship.svg"><img width="128" alt="Steering wheel ship" src="http://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Steering_wheel_ship.svg/128px-Steering_wheel_ship.svg.png"/></a>
 
-A Clojure library design to let you compose Compojure routes and define the
-structure of your application at the same time as opposed to strictly building
-up just the routes alone.
+Helmsman steers your app by letting you compose Compojure routes and the structure of your application at the same time.
 
 Here is the latest leiningen dependancy string for your project.clj file:
 
