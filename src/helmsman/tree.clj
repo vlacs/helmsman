@@ -274,7 +274,7 @@
                       routes/cons-route
                       (routes/rewrite-uri
                         (extract-route (:loc trio-map))
-                        (uri/assemble new-base-uri)))
+                        (str "/" (uri/assemble new-base-uri))))
                     (meta (zip/node (zip/up (:loc trio-map)))))
         new-working-routes (append-route (:routes trio-map) new-route)]
     (make-trio
@@ -322,8 +322,8 @@
       (zip/replace (zip/up (:loc trio-map)) [])
       (append-route (:routes trio-map)
                     (static-fn
-                      (uri/assemble
-                        (uri/normalize-path uri))
+                      (str "/" (uri/assemble
+                                 (uri/normalize-path uri)))
                       opts))
       (:uri trio-map))))
 
