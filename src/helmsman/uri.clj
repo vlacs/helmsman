@@ -43,3 +43,34 @@
   "Turns a uri path into a uri string."
   [uri-path]
   (apply (partial str "/") (interpose "/" (normalize-path uri-path))))
+
+(defn common-uri-path
+  [uri-one uri-two]
+  (loop [common-uri []
+         one (normalize-path uri-one)
+         two (normalize-path uri-two)]
+    (let [s1 (first one)
+          s2 (first two)]
+      (if (or (not (= s1 s2))
+              (nil? s1)
+              (nil? s2))
+        common-uri
+        (recur
+          (conj common-uri s1)
+          (vec (rest one))
+          (vec (rest two)))))))
+
+(defn relative-uri-path
+  [uri-one uri-two]
+  (loop
+    [one (normalize-path uri-one)
+     two (normalize-path uri-two)]
+    (let [s1 (first one)
+          s2 (first two)]
+      (if (or (not (= s1 s2))
+              (nil? s1)
+              (nil? s2))
+        [one two]
+        (recur
+          (vec (rest one))
+          (vec (rest two)))))))
