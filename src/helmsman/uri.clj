@@ -45,7 +45,13 @@
   removes any empty items. This is useful for path navigation and uri
   generation."
   [uri-path]
-  (vec (filter #(not (empty? %1)) (flatten uri-path))))
+  (vec 
+    (filter 
+      (fn normalize-path-filter-fn
+        [i]
+        (if (keyword? i)
+         true
+         (not (empty? i)))) (flatten uri-path))))
 
 (defn sub-path-item
   [sub-map i]
@@ -98,15 +104,15 @@
     [one (normalize-path uri-one)
      two (normalize-path uri-two)]
     (let [s1 (first one)
-          s2 (first two)
-          equity (or (= s1 s2)
-                     
-                     )
-          ]
-
-      (if (or (not (= s1 s2))
-              (nil? s1)
-              (nil? s2))
+          s2 (first two)]
+      (if
+        (or
+          (and
+            (not (= s1 s2))
+            (not (keyword? s1))
+            (not (keyword? s2)))
+          (nil? s1)
+          (nil? s2))
         [one two]
         (recur
           (vec (rest one))
@@ -117,7 +123,7 @@
   and the other is not. Other than that, the two URIs would be identical. We
   need this to create full URIs from a relative location by converging on
   a real uri from the request and the uri path that it came from.
-  
+
   URIs that don't have a common ending cannot be converged as the two URIs
   are completely different with nothing in common from the bottom up.
   

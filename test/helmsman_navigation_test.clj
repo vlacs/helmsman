@@ -1,7 +1,9 @@
 (ns helmsman-navigation-test
   (:require
+    [clojure.test :refer :all]
     [helmsman :refer :all]
-    [helmsman.navigation :as nav]))
+    [helmsman.navigation :as nav]
+    [ring.mock.request :refer [request]]))
 
 (def basic-page
   {:status 200
@@ -9,6 +11,13 @@
    :body "Hello world."})
 
 (def basic-handler (constantly basic-page))
+
+(defn basic-handler
+  [request]
+  {:rval
+   (nav/meta-from-request
+     request
+     (nav/pred-by-id :static-assets))})
 
 (def navigation-test-structure
   [^{:name "Home page"
@@ -22,4 +31,14 @@
    [:get "/item" basic-handler
     ^{:name "Nested Item Page!"
       :id :nested-item}
-    [:get "/nested" basic-handler]]])
+    [:get "/nested" basic-handler
+     ^{:id :static-assets}
+     [:get "/assets" basic-handler]]]])
+
+(def app-handler (helmsman/compile-routes navigation-test-structure))
+
+(deftest navigation-meta-search
+  (testing "Browse meta by id."
+    (is (= :static-assets
+      (let [result (app-handler (request :get "/"))]
+        (get-in result [:rval :id]))))))
