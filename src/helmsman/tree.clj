@@ -25,7 +25,10 @@
   the first node will be checked to see if we're sitting on a node that supports
   URIs such as contexts and routes."
   [zipper]
-  (or (on-route? zipper) (on-context? zipper)))
+  (or (on-route? zipper)
+      (on-context? zipper)
+      (on-resources? zipper)
+      (on-files? zipper)))
 
 (defn on-middleware?
   "see on-route?
