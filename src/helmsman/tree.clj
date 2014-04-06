@@ -92,6 +92,27 @@
       nodes
       (recur (inc c) (zip/next z) (conj nodes (zip/node z))))))
 
+(defn remove-rights
+  "Removes the items to the right of the current zipper location. It also
+  takes these removed item and puts them into :helmsman.tree/stripped-rights
+  in the meta-data for the node. Meta-data is preserved through this removal."
+  [trio-map]
+  (let [preserved-meta (meta (zip/node (zip/up (:loc trio-map))))
+        new-meta (assoc (if (nil? preserved-meta)
+                          {} preserved-meta)
+                        ::stripped-rights
+                        (zip/rights (:loc trio-map)))]
+    (with-meta
+      (assoc
+        trio-map
+        :loc
+        (loop [zipper (:loc trio-map)]
+          (let [itr (zip/right zipper)]
+            (if (nil? itr)
+              zipper
+              (recur (zip/remove itr))))))
+      new-meta)))
+
 (defn extract-route
   "This makes the assumption that we're sitting on the first node of a route
   therefore the next 3 nodes (including the current one,) are the params to
@@ -304,7 +325,7 @@
     ;;; BEWARE! The routes zipper is not sitting on the level that we're working
     ;;; with. We must go up, do some stuff, then drop back in.
     (make-trio
-      (zip/replace (zip/up (:loc trio-map)) [])
+      (:loc trio-map)
       (replace-current-routes
         route-level-zipper
         (apply
@@ -317,18 +338,25 @@
       (:uri trio-map))))
 
 (defn process-static
-  [trio-map static-fn]
+  [static-fn trio-map]
   (let [contents (rights-vec (:loc trio-map))
-        uri (conj (:uri trio-map) (uri/path (first contents)))
+        uri (conj (:uri trio-map) (extract-uri (:loc trio-map)))
         opts (rest contents)]
     (make-trio
-      (zip/replace (zip/up (:loc trio-map)) [])
+      (zip/right (:loc trio-map))
       (append-route (:routes trio-map)
                     (static-fn
                       (str "/" (uri/assemble
                                  (uri/normalize-path uri)))
                       opts))
-      (:uri trio-map))))
+      uri)))
+
+(defn process-singular
+  [process-fn trio-map]
+  (let [processed-trio (process-fn trio-map)
+        new-trio (remove-rights
+                  (process-fn trio-map))]
+    (assoc new-trio :loc (zip/leftmost (:loc new-trio)))))
 
 (defn process-current
   "Processes the current item that the location zipper is sitting on.
@@ -339,9 +367,19 @@
     (cond
       (on-route? definition-zipper) (process-route trio-map)
       (on-context? definition-zipper) (process-context trio-map)
-      (on-middleware? definition-zipper) (process-middleware trio-map)
-      (on-resources? definition-zipper) (process-static trio-map routes/cons-resources)
-      (on-files? definition-zipper) (process-static trio-map routes/cons-files)
+      (on-middleware? definition-zipper) (process-singular
+                                           process-middleware
+                                           trio-map)
+      (on-resources? definition-zipper) (process-singular
+                                          (partial
+                                            process-static
+                                            routes/cons-resources)
+                                          trio-map)
+      (on-files? definition-zipper) (process-singular
+                                      (partial
+                                        process-static
+                                        routes/cons-files)
+                                      trio-map)
 
       ;;; TODO: Think up a better debug message. Maybe include some data too.
       :else (debug "Bolding doing what we've never done before!")
