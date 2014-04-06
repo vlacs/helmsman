@@ -20,16 +20,6 @@
   [zipper]
   (routes/context? (zip/node zipper)))
 
-(defn on-uri?
-  "Assuming the zipper is sitting on the first element of the current vector,
-  the first node will be checked to see if we're sitting on a node that supports
-  URIs such as contexts and routes."
-  [zipper]
-  (or (on-route? zipper)
-      (on-context? zipper)
-      (on-resources? zipper)
-      (on-files? zipper)))
-
 (defn on-middleware?
   "see on-route?
   Returns true if the zipper is sitting on a middleware item."
@@ -47,6 +37,16 @@
   from any path on the current computer or server."
   [zipper]
   (routes/files? (zip/node zipper)))
+ 
+(defn on-uri?
+  "Assuming the zipper is sitting on the first element of the current vector,
+  the first node will be checked to see if we're sitting on a node that supports
+  URIs such as contexts and routes."
+  [zipper]
+  (or (on-route? zipper)
+      (on-context? zipper)
+      (on-resources? zipper)
+      (on-files? zipper)))
 
 (defn flatten-all-routes
   "Reduces the tree of handlers to a single level vector to be processed by
