@@ -1,6 +1,7 @@
 (ns helmsman.navigation
   (:require
-    [helmsman.tree :as tree]))
+    [helmsman.tree :as tree]
+    [helmsman.uri :as uri]))
 
 (def navigation-meta-tags
   [:id :name :weight])
@@ -28,3 +29,16 @@
             i
             (recur (vec (rest md)))))))))
 
+(defn meta-id
+  "Gets an item out of the meta data with a particular id stored in helmsman's litte
+  corner of the ring request. Ids are expected to be unique."
+  [request id]
+  (meta-from-request request (pred-by-id id)))
+
+(defn id-to-uri
+  "This creates a URI string from the current path from the passed request to the uri-
+  path for the route with the passed unique meta-data id."
+  [request id]
+  (uri/relative-uri-str
+    request
+    (:uri-path (meta-id request id))))

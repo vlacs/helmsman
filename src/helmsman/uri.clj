@@ -149,3 +149,16 @@
       (into
         (vec (repeat u-levels ".."))
         (second divergence)))))
+
+(defn relative-uri-str
+  "Simplifies relative URI creation. Given a ring request map and a
+  destination uri path, we can make a relative URI string, even with named
+  uri parameters. The caviat is that we can't create a URI to a path with
+  a wildcard. It's too ambiguous and we discourage it by not supporting it."
+  [request destination-uri-path & assemble-fn-args]
+  (apply
+    (partial assemble
+             (relative-uri
+               (get-in request [:helmsman :uri-path])
+               destination-uri-path))
+    assemble-fn-args))
