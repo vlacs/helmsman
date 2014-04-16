@@ -7,7 +7,7 @@ Helmsman steers your app by letting you compose Compojure routes and the structu
 Here is the latest leiningen dependancy string for your project.clj file:
 
 ```clojure
-[org.vlacs/helmsman "0.1.9"]
+[org.vlacs/helmsman "0.1.10"]
 ```
 
 TODO: More description!
