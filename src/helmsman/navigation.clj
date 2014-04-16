@@ -35,10 +35,15 @@
   [request id]
   (meta-from-request request (pred-by-id id)))
 
+(defn id->path
+  [request id]
+  (:uri-path (meta-id request id)))
+
+;; TODO: Rename this fn to something less hyphenated. --jdoane
 (defn id-to-uri
   "This creates a URI string from the current path from the passed request to the uri-
   path for the route with the passed unique meta-data id."
   [request id]
   (uri/relative-uri-str
     request
-    (:uri-path (meta-id request id))))
+    (id->path request id)))
