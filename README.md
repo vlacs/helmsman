@@ -132,7 +132,7 @@ If the meta-data is in the request, you can get it by calling:
 With the meta-data you can either use predicates to find a single item or to
 limit the size of the set. Both of these rely on the fn
 ```helmsman.navigation/meta-filter``` which really is just a wrapper for
-```clojure.set/select```. ```meta-filter``` returns a new set. You can get
+```clojure.set/select``` . ```meta-filter``` returns a new set. You can get
 a single item based on a predicate by calling
 ```helmsman.navigation/meta-get-unique``` which takes the same parameters as
 meta-filter, the meta-data set and the predicate. What you want out of the map
@@ -154,7 +154,7 @@ dedicated to getting a single item with a value on that key:
 Note: You can combine predicates in clojure by using
 ```clojure.core/every-pred``` to merge your predicates into a single one and all
 of helmsman's predefined predicates for navigation will be in
-```helmsman.navigation.preds```.
+```helmsman.navigation.preds``` .
 
 ## Relative URIs made simple
 Given two distinct URI under the same hostname, we can reliable determine how
@@ -170,11 +170,11 @@ vectors.
 
 For example, you have two addresses on the same host;
 ```http://www.somerandomhost.com/working/on/the/railroad``` and
-```http://www.somerandomhost.com/working/with/people```. The first contains the
+```http://www.somerandomhost.com/working/with/people``` . The first contains the
 URI ```/working/on/the/railroad``` which Helmsman turns into
-```["working" "on" "the" "railroad"]```. Same thing with the second address. It
+```["working" "on" "the" "railroad"]``` . Same thing with the second address. It
 has the URI ```/working/with/people``` which Helmsman turns into 
-```["working" "with" "people"```.
+```["working" "with" "people"``` .
 
 Using these uri paths (vector representation of a URI) we can very easily make
 a relative URI either in helmsman format or in string format.
