@@ -191,17 +191,19 @@ a relative URI either in helmsman format or in string format.
 ```
 
 The ```helmsman.uri/assemble``` fn can take optional parameters that replace
-keyworded uri segments. So you can do things like this as well (both forms
-behave the same way):
+keyworded uri segments. So you can do things like this as well:
 
 ```clojure
 (helmsman.uri/assemble ["some" "uri" "over" :location]
   :location "there")
-(helmsman.uri/assemble ["some" "uri" "over" ":location"]
-  :location "there")
   
-;;; Both result in "some/uri/over/there" 
+;;; Results in "some/uri/over/there" 
 ```
+
+Variable uri segments are handled by helmsman when uri-path is generated for
+each route, so a statement like ```[:get "/some/cool/:stuff/:here" ...]```
+with automatically have a :uri-path meta data item that contains
+```["some" "cool" :stuff :here]``` which we can use to make URIs.
 
 ## License
 
