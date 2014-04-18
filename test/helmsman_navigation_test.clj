@@ -15,30 +15,33 @@
 (defn basic-handler
   [request]
   {:rval
-   (nav/meta-from-request
-     request
-     (nav/pred-by-id :static-assets))})
+   (nav/meta-with-id
+     (get-in request [:helmsman :all-meta])
+     :static-assets)})
 
 (def navigation-test-structure
   [^{:name "Home page"
-     :id :home}
+     :id :home
+     :main-menu true}
    [:get "/" basic-handler]
    ^{:name "The Foobar Page!"
-     :id :foobar}
+     :id :foobar
+     :main-menu true}
    [:get "/foobar" basic-handler]
    ^{:name "The Item Page!"
      :id :item-page}
    [:get "/item" basic-handler
     ^{:name "Nested Item Page!"
-      :id :nested-item}
+      :id :nested-item
+      :main-menu true}
     [:get "/nested" basic-handler
      ^{:id :static-assets}
      [:get "/assets" basic-handler]]]])
 
-(def app-handler (helmsman/compile-routes navigation-test-structure))
+;;; Navigation doesn't need routes, just meta-data.
+(def app-meta (helmsman/compile-meta navigation-test-structure))
 
 (deftest navigation-meta-search
-  (testing "Browse meta by id."
-    (is (= :static-assets
-      (let [result (app-handler (request :get "/"))]
-        (get-in result [:rval :id]))))))
+  (testing "Browse meta by unique id."
+    (is (not (nil? (nav/meta-with-id app-meta :static-assets))))))
+

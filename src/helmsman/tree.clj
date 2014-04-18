@@ -385,8 +385,11 @@
       :else (debug "Bolding doing what we've never done before!")
       )))
 
+;;; TODO: Clean this up so it doesn't have to do *everything* to get meta.
+;;; Granted this should only get call once and if it doens't we can cache the
+;;; result.
 (defn gather-all-meta
-  "Gets metadata about the helmsman definition."
+  "Gets meta data about the helmsman definition and returns it as a set of maps."
   [site-structure]
   (loop [state (make-new-trio site-structure)
          nav-set #{}]

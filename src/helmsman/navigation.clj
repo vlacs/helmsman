@@ -1,49 +1,29 @@
 (ns helmsman.navigation
   (:require
+    [clojure.set]
     [helmsman.tree :as tree]
-    [helmsman.uri :as uri]))
+    [helmsman.uri :as uri]
+    [helmsman.navigation.preds :as preds]))
 
-(def navigation-meta-tags
-  [:id :name :weight])
+(defn meta-filter
+  "Takes in a set of meta-data and a predicate and returns a sub-set
+  for all items in the set where pred returns true."
+  [meta-data pred?]
+  (clojure.set/select pred? meta-data))
 
-(defn pred-by-id
-  [id]
-  (fn [i]
-    (if
-      (contains? i :id)
-      (let [m-id (get i :id)]
-        (if (= m-id id)
-          true
-          false))
-      false)))
+(defn meta-get-unique
+  [meta-data pred?]
+  (first (meta-filter meta-data pred?)))
 
-(defn meta-from-request
-  [request pred-fn]
-  (let [meta-data (get-in request [:helmsman :all-meta])]
-    (loop [md (vec meta-data)]
-      (if (empty? md)
-        nil
-        (let [i (first md)]
-          (if
-            (pred-fn i)
-            i
-            (recur (vec (rest md)))))))))
+(defn meta-with-id
+  [meta-data id]
+  (meta-get-unique meta-data (preds/with? :id id)))
 
-(defn meta-id
-  "Gets an item out of the meta data with a particular id stored in helmsman's litte
-  corner of the ring request. Ids are expected to be unique."
-  [request id]
-  (meta-from-request request (pred-by-id id)))
-
-(defn id->path
-  [request id]
-  (:uri-path (meta-id request id)))
-
-;; TODO: Rename this fn to something less hyphenated. --jdoane
-(defn id-to-uri
+(defn id->uri
   "This creates a URI string from the current path from the passed request to the uri-
-  path for the route with the passed unique meta-data id."
+  path for the route with the passed unique meta-data id. Returns nil if there is no
+  meta-data or item with the given id."
   [request id]
-  (uri/relative-uri-str
-    request
-    (id->path request id)))
+  (if-let [meta-data (get-in request [:helmsman :all-meta])]
+    (if-let [meta-item (meta-with-id meta-data id)]
+      (uri/relative-uri-str request meta-item))))

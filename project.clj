@@ -1,4 +1,4 @@
-(defproject org.vlacs/helmsman "0.1.10"
+(defproject org.vlacs/helmsman "0.2.0"
   :description "This is a library for describing the structure of a web appliction.
                This way, we have uris and data associated directly with routes.
                This is nice for generating navigation or applying middleware to
@@ -6,11 +6,10 @@
   :url "https://github.com/vlacs/helmsman"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.5.1"]
-                 [compojure "1.1.5" :exclusions [org.clojure/tools.macro ring/ring-core]]
-                 [ring "1.2.1"]
-                 [clout "1.1.0"]
-                 [com.taoensso/timbre "3.0.1"]]
+  :dependencies [[org.clojure/clojure "1.6.0"]
+                 [ring "1.2.2"]
+                 [compojure "1.1.6" :exclodes [ring/ring-core]]
+                 [com.taoensso/timbre "3.1.6"]]
   :pedantic? :warn
   :profiles {:dev {:source-paths ["dev"]
                    :dependencies [[org.clojure/tools.nrepl "0.2.3"]
