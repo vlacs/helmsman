@@ -174,7 +174,7 @@ For example, you have two addresses on the same host;
 URI ```/working/on/the/railroad``` which Helmsman turns into
 ```["working" "on" "the" "railroad"]``` . Same thing with the second address. It
 has the URI ```/working/with/people``` which Helmsman turns into 
-```["working" "with" "people"``` .
+```["working" "with" "people"]``` .
 
 Using these uri paths (vector representation of a URI) we can very easily make
 a relative URI either in helmsman format or in string format.
