@@ -38,7 +38,9 @@
 
 (defn variable-string?
   [identifier]
-  (= (str (first identifier)) ":"))
+  (or (when (string? identifier)
+        (= (str (first identifier)) ":"))
+      (keyword? identifier)))
 
 (defn normalize-path
   "Converts a multi-level uri-path vector into a single level vector and
@@ -53,11 +55,16 @@
          true
          (not (empty? i)))) (flatten uri-path))))
 
+(defn keywordize
+  [i]
+  (keyword (apply str (rest i))))
+
 (defn sub-path-item
   [sub-map i]
   (if (variable-string? i)
-    (get sub-map (keyword (apply str (rest i))) i)
-    i))
+    (get sub-map
+         (if (not (keyword? i))
+           (keywordize i) i)) i))
 
 (defn process-path-args
   [uri-path args]
