@@ -10,6 +10,7 @@
                  [ring "1.2.2"]
                  [compojure "1.1.6" :exclodes [ring/ring-core]]
                  [com.taoensso/timbre "3.1.6"]]
+  :plugins [[lein-cloverage "1.0.2"]]
   :pedantic? :warn
   :profiles {:dev {:source-paths ["dev"]
                    :dependencies [[org.clojure/tools.nrepl "0.2.3"]
