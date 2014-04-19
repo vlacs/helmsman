@@ -151,6 +151,10 @@ dedicated to getting a single item with a value on that key:
 (helmsman.navigation/meta-with-id meta-data "id-name")
 ```
 
+Every route has a meta data item called ```:uri-path``` which get pulled out
+of the definition that created it. These paths can be used to make relative
+links which will be touched on next.
+
 Note: You can combine predicates in clojure by using
 ```clojure.core/every-pred``` to merge your predicates into a single one and all
 of helmsman's predefined predicates for navigation will be in
@@ -162,11 +166,11 @@ far up the tree we need to go before we start going back down it on the same
 point as the destination URI. Helmsman can do that, you just need to know where
 you are and where you're going, if you don't have either of those, you're lost.
 
-Internally Helmsman generates URIs as a vector with each item being a URI
-segment. Internally helmsman uses a two-level vector to handle special cases for
+Helmsman generates URIs as a vector with each item being a URI segment.
+Internally helmsman uses a two-level vector to handle special cases for
 things like nesting routes and contexts, but you'll never encounter them. All
 URIs that come out of helmsman (before it turns them into a string,) are
-vectors.
+flattened vectors of strings, nothing more.
 
 For example, you have two addresses on the same host;
 ```http://www.somerandomhost.com/working/on/the/railroad``` and
@@ -185,6 +189,21 @@ a relative URI either in helmsman format or in string format.
 (helmsman.uri/assemble [".." ".." "with" "people"])
 ;;; Returns the string representation "../../with/people"
 ```
+
+The ```helmsman.uri/assemble``` fn can take optional parameters that replace
+keyworded uri segments. So you can do things like this as well:
+
+```clojure
+(helmsman.uri/assemble ["some" "uri" "over" :location]
+  :location "there")
+  
+;;; Results in "some/uri/over/there" 
+```
+
+Variable uri segments are handled by helmsman when uri-path is generated for
+each route, so a statement like ```[:get "/some/cool/:stuff/:here" ...]```
+with automatically have a :uri-path meta data item that contains
+```["some" "cool" :stuff :here]``` which we can use to make URIs.
 
 ## License
 
