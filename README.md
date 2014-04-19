@@ -1,6 +1,5 @@
 # Helmsman
-[![Build Status](https://travis-ci.org/vlacs/helmsman.png?branch=master)](https://travis-ci.org/vlacs/helmsman)
-[![Coverage Status](https://coveralls.io/repos/vlacs/helmsman/badge.png?branch=master)](https://coveralls.io/r/vlacs/helmsman?branch=master)
+[![Build Status](https://travis-ci.org/vlacs/helmsman.png?branch=master)](https://travis-ci.org/vlacs/helmsman) [![Coverage Status](https://coveralls.io/repos/vlacs/helmsman/badge.png?branch=master)](https://coveralls.io/r/vlacs/helmsman?branch=master)
 ===============
 <a title="By Steering_wheel_ship_1.png: Lidingo derivative work: Arnaud Ramey (Steering_wheel_ship_1.png) [CC-BY-SA-3.0 (http://creativecommons.org/licenses/by-sa/3.0) or GFDL (http://www.gnu.org/copyleft/fdl.html)], via Wikimedia Commons" href="http://commons.wikimedia.org/wiki/File%3ASteering_wheel_ship.svg"><img width="128" alt="Steering wheel ship" src="http://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Steering_wheel_ship.svg/128px-Steering_wheel_ship.svg.png"/></a>
 
