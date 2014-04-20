@@ -64,7 +64,7 @@
   (if (variable-string? i)
     (get sub-map
          (if (not (keyword? i))
-           (keywordize i) i)) i))
+           (keywordize i) i) i) i))
 
 (defn process-path-args
   [uri-path args]

@@ -10,7 +10,7 @@ the first place and leveraging it.
 Here is the latest leiningen dependancy string for your project.clj file:
 
 ```clojure
-[org.vlacs/helmsman "0.2.1"]
+[org.vlacs/helmsman "0.2.2"]
 ```
 
 ## What does Helmsman do?

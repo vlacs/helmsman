@@ -193,8 +193,7 @@
     (throw (Exception. "zipper can not be nil.")))
   (when (not (zip/branch? loc))
     (throw (Exception. (str "loc not on branch. Must append to a branch.\n"
-                            (prn-str loc)
-                            ))))
+                            (prn-str loc)))))
   (zip/rightmost
     (let [added-branch (zip/append-child loc [])]
       (if (not (empty-branch? added-branch))
@@ -299,6 +298,7 @@
                       (routes/rewrite-uri
                         (extract-route (:loc trio-map))
                         (str "/" (uri/assemble new-base-uri))))
+
                     (meta (zip/node (zip/up (:loc trio-map)))))
         new-working-routes (append-route (:routes trio-map) new-route)]
     (make-trio
