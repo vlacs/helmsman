@@ -26,4 +26,4 @@
   [request id]
   (if-let [meta-data (get-in request [:helmsman :all-meta])]
     (if-let [meta-item (meta-with-id meta-data id)]
-      (uri/relative-uri-str request meta-item))))
+      (uri/relative-uri-str request (:uri-path meta-item)))))

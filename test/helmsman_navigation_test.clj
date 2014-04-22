@@ -45,3 +45,4 @@
   (testing "Browse meta by unique id."
     (is (not (nil? (nav/meta-with-id app-meta :static-assets))))))
 
+
