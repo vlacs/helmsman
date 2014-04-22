@@ -23,7 +23,10 @@
   "This creates a URI string from the current path from the passed request to the uri-
   path for the route with the passed unique meta-data id. Returns nil if there is no
   meta-data or item with the given id."
-  [request id]
+  [request id & args]
   (if-let [meta-data (get-in request [:helmsman :all-meta])]
     (if-let [meta-item (meta-with-id meta-data id)]
-      (uri/relative-uri-str request (:uri-path meta-item)))))
+      (apply
+        (partial
+          uri/relative-uri-str
+          request (:uri-path meta-item)) args))))
