@@ -26,9 +26,21 @@ for links; This includes relative URIs (which are prefered) and absolute URIs.
 
 ## Example web application
 There has been some interest in some example code that shows how Helmsman works, so
-I created a repo with an on-going example of how you can use Helmsman.
+I created a repo with an on-going example of how you can use Helmsman. Initially
+this example was going to be wrapped in a separate git repo. However, it makes
+more sense to add it to Helmsman itself so we can use the example for testing as
+well (and kill two birds with one stone.)
 
-[Helmsman web app example](https://github.com/vlacs/helmsman-example)
+It's very easy to spin up the example. All you need to do is spin up a REPL
+inside the Helmsman Leiningen project and run ```(reset)``` .
+
+Now that's nice that it spins up an example, but we actually want to see what
+we're using to do it and there are two files that do this.
+
+First of all, ```dev/user.clj``` contains our ```tools.namespace``` workflow for
+reloading code which handles, initializing, starting, and stopping our example.
+We also have ```dev/helmsman/example-site.clj``` which contains all the logic
+to execute the functions of our example website.
 
 # Route and handler creation
 

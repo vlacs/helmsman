@@ -8,7 +8,9 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [ring "1.2.2"]
-                 [compojure "1.1.6" :exclodes [ring/ring-core]]
+                 ;;; We exclude ring/core for compojure because it's using 1.2.1
+                 ;;; and we're using 1.2.2 in Helmsman.
+                 [compojure "1.1.6" :exclusions [ring/ring-core]]
                  [com.taoensso/timbre "3.1.6"]]
   :plugins [[lein-cloverage "1.0.2"]]
   :pedantic? :warn
