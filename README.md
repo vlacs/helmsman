@@ -24,6 +24,12 @@ composed together and eventually executed. In particular, knowing about URIs
 associated with different routes will enable you to be able to create reliable uri
 for links; This includes relative URIs (which are prefered) and absolute URIs.
 
+## Example web application
+There has been some interest in some example code that shows how Helmsman works, so
+I created a repo with an on-going example of how you can use Helmsman.
+
+[Helmsman web app example](https://github.com/vlacs/helmsman-example)
+
 # Route and handler creation
 
 ## Routes
