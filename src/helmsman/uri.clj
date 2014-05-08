@@ -23,15 +23,6 @@
       strip-leading-slashes
       strip-trailing-slashes))
 
-(defn path
-  "Creates a flat URI path to be used for navigation."
-  [uri-string]
-  (string/split
-    (-> uri-string
-        trim-slashes
-        singular-slashes)
-    #"/+"))
-
 (defn wildcard-string?
   [identifier]
   (= (str (first identifier)) "*"))
@@ -41,6 +32,27 @@
   (or (when (string? identifier)
         (= (str (first identifier)) ":"))
       (keyword? identifier)))
+
+(defn keywordize
+  [i]
+  (keyword (apply str (rest i))))
+
+(defn transform-keywords
+  [uri-path]
+  (vec
+    (map
+      (fn [i] (if (variable-string? i) (keywordize i) i))
+      uri-path)))
+
+(defn path
+  "Creates a flat URI path to be used for navigation."
+  [uri-string]
+  (transform-keywords
+    (string/split
+      (-> uri-string
+          trim-slashes
+          singular-slashes)
+      #"/+")))
 
 (defn normalize-path
   "Converts a multi-level uri-path vector into a single level vector and
@@ -54,10 +66,6 @@
         (if (keyword? i)
          true
          (not (empty? i)))) (flatten uri-path))))
-
-(defn keywordize
-  [i]
-  (keyword (apply str (rest i))))
 
 (defn sub-path-item
   [sub-map i]
