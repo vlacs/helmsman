@@ -13,6 +13,11 @@ Here is the latest leiningen dependancy string for your project.clj file:
 [org.vlacs/helmsman "0.2.6"]
 ```
 
+## Running Tests
+You can build the necessary dependencies and run the tests with one command.
+
+```$ sh test.sh```
+
 ## What does Helmsman do?
 
 A website using Helmsman is designed to process a series of nested vectors. Each vector
