@@ -67,6 +67,10 @@
        (home-page-body request)
        (return-home request)))
 
+(h/defhandler debug-page
+  [:as request]
+  (prn-str request))
+
 (def our-routes
   [^{:id ::home}
    [:get "/" home-page]
@@ -76,7 +80,10 @@
     ^{:id ::subtract}
     [:get "subtract/:one/:two" subtract-page]
     ^{:id ::multiply}
-    [:get "multiply/:one/:two" multiply-page]]])
+    [:get "multiply/:one/:two" multiply-page]]
+   ^{:id ::debug}
+   [:get "/debugging" debug-page]
+   ])
 
 (comment
   (def application (h/compile-routes our-routes))

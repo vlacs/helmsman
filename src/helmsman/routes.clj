@@ -2,6 +2,7 @@
   (:require [helmsman.uri :as uri]
             [compojure.core :as compojure]
             [compojure.route]
+            [clojure.set]
             [taoensso.timbre :as timbre]))
 
 (timbre/refer-timbre)
@@ -10,6 +11,24 @@
   #{:get :head :post
     :put :delete :trace
     :options :connect :patch})
+
+(def path-bearing-keywords
+  (clojure.set/union
+    http-methods
+    #{:files :resources :context :any}))
+
+(def nestable-keywords
+  (clojure.set/union
+    http-methods
+    #{:context :any}))
+
+(def keyword-route-length
+  (into
+    {}
+    (vec
+      (conj
+        (map #(vec [% 3]) (clojure.set/union http-methods #{:any}))
+        [:context 2]))))
 
 (defn http-method?
   "Returns true if the provided argument is a http method."
