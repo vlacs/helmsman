@@ -15,6 +15,7 @@
         spi (second item)
         context? (routes/context? hpi)
         route? (routes/route? hpi)
+        middleware? (routes/middleware? hpi)
         length (count item)
         min-length
         (get
@@ -22,25 +23,83 @@
           hpi length)]
     {:context? context?
      :route? route?
-     :middleware? (routes/middleware? hpi)
+     :http-method (when route? hpi)
+     :middleware? middleware?
      :path (when (contains? routes/path-bearing-keywords hpi)
              (uri/path spi))
      :route-fn (when route? (nth item 2))
-     :middleware-fn nil
+     :raw-item item
+     :meta (meta item)
      :sub-definition 
      (when (and
-             (route? or context?)
+             (or route? context?)
              (> length min-length))
        (subvec item min-length))}))
 
+(defn signature-map-fn
+  [i]
+  (if (keyword? i)
+    \? (first i)))
+
 (defn make-route
-  [http-method path middleware meta-data]
+  [http-method path handler-fn middleware meta-data]
   {:http-method http-method
    :path path
-   :signature 
+   :signature (map signature-map-fn path)
    :middleware middleware
    :handler-fn handler-fn
    :meta meta-data})
+
+(defn process-compiled-routes
+  [compiled-routes
+   current-stanza
+   stacked-paths
+   stacked-middleware]
+  (if (:route? current-stanza)
+    (conj
+      compiled-routes
+      (make-route
+        (:http-method current-stanza)
+        (conj stacked-path (:path current-stanza))
+        (:route-fn current-stanza)
+        stacked-middleware
+        (:meta current-stanza)))
+    compiled-routes))
+
+(defn process-stacked-routes
+  [current-stanza upcoming-routes stacked-routes]
+  (if (nil? current-stanza)
+    (pop stacked-routes)
+    (if (:sub-definition current-stanza)
+      (cons (rest upcoming-routes) stacked-routes)
+      stacked-routes)))
+
+(defn process-stacked-paths
+  [current-stanza stacked-paths]
+  (if (nil? current-stanza)
+    (pop stacked-paths)
+    (if (:sub-definition current-stanza)
+      (cons (:path current-stanza) stacked-paths)
+      stacked-paths)))
+
+(defn process-upcoming-routes
+  [current-stanza upcoming-routes stacked-routes]
+  (if (nil? current-stanza)
+    (first stacked-routes)
+    (if-let [new-level (:sub-definition current-stanza)]
+      new-level (rest upcoming-routes))))
+
+(defn process-stacked-middleware
+  [current-stanza stacked-middleware]
+  (if (nil? current-stanza)
+    (pop stacked-middleware)
+    (if (:middleware? current-stanza)
+      (cons
+        (cons
+          (:raw-item current-stanza)
+          (first stacked-middleware))
+        (rest stacked-middleware))
+      stacked-middleware)))
 
 (defn destruct-definition
   "The core of Helmsman's integrated routing. Converts a Compojure like routing
@@ -49,12 +108,31 @@
   enable the ability to route before middleware and to route quickly based on
   Helmsman's URI handling."
   [definition]
-  (loop [route-seq '()
-         current-stanza (about-stanza (first definition))
-         middleware-stack []
-         return-stack (subvec definition 1)]
-    (if (empty? return-stack) and (empty? (:sub-definition current-stanza))
-      
-      )
-    ))
+  (loop
+    [compiled-routes '()
+     cl-upcoming-routes definition
+     stacked-routes '()
+     stacked-paths '()
+     stacked-middleware '('())]
+    (let [level-empty (empty cl-upcoming-routes)]
+      (if
+        (and
+          (empty? stacked-routes)
+          (empty? cl-upcoming-routes))
+        compiled-routes
+        (let [current-stanza (about-stanza (first cl-upcoming-routes))
+              after-stanza-items (rest cl-upcoming-routes)
+              step-in (not (nil? (:sub-definition current-stanza)))]
+          (recur
+            (process-compiled-routes
+              compiled-routes current-stanza
+              stacked-paths stacked-middleware)
+            (process-upcoming-routes
+              current-stanza cl-upcoming-routes)
+            (process-stacked-routes
+              current-stanza cl-upcoming-routes stacked-routes)
+            (process-stacked-paths
+              current-stanza stacked-paths)
+            (process-stacked-middleware
+              current-stanza stacked-middleware)))))))
 
