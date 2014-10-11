@@ -15,7 +15,11 @@
         spi (second item)
         context? (routes/context? hpi)
         route? (routes/route? hpi)
-        length (count item)]
+        length (count item)
+        min-length
+        (get
+          routes/keyword-route-length
+          hpi length)]
     {:context? context?
      :route? route?
      :middleware? (routes/middleware? hpi)
@@ -23,15 +27,34 @@
              (uri/path spi))
      :route-fn (when route? (nth item 2))
      :middleware-fn nil
-     :nested (when 
-               (contains? routes/nestable-keywords hpi)
-               (let [di (get routes/keyword-route-length hpi)]
-                 (when (> length di)
-                   ;;; This is where this call becomes recursive.
-                   (about-vector
-                     (subvec item di)))))}))
+     :sub-definition 
+     (when (and
+             (route? or context?)
+             (> length min-length))
+       (subvec item min-length))}))
 
-(defn about-vector
-  "Takes a definition list and maps about-stanza on it."
-  [definition-list]
-  (map about-stanza definition-list))
+(defn make-route
+  [http-method path middleware meta-data]
+  {:http-method http-method
+   :path path
+   :signature 
+   :middleware middleware
+   :handler-fn handler-fn
+   :meta meta-data})
+
+(defn destruct-definition
+  "The core of Helmsman's integrated routing. Converts a Compojure like routing
+  definition into a Helmsman route map which describes each and every route in
+  its entirety, including the middleware that need to run for any route to
+  enable the ability to route before middleware and to route quickly based on
+  Helmsman's URI handling."
+  [definition]
+  (loop [route-seq '()
+         current-stanza (about-stanza (first definition))
+         middleware-stack []
+         return-stack (subvec definition 1)]
+    (if (empty? return-stack) and (empty? (:sub-definition current-stanza))
+      
+      )
+    ))
+
