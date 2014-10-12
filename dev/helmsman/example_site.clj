@@ -1,7 +1,9 @@
 (ns helmsman.example-site
-  (:require [helmsman :as h]
-            [helmsman.navigation :as nav]
-            [helmsman.uri :as uri]))
+  (:require 
+    [helmsman :as h]
+    [helmsman.router :as router]
+    [helmsman.navigation :as nav]
+    [helmsman.uri :as uri]))
 
 (defn basic-html-doc
   "Creates a basic template for an HTML page."

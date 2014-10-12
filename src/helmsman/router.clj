@@ -11,30 +11,32 @@
   different portions of any given stanza. Any nested stanzas will be in the
   :nested item of the map, which can be used to recursively generate stanzas."
   [item]
-  (let [hpi (first item)
-        spi (second item)
-        context? (routes/context? hpi)
-        route? (routes/route? hpi)
-        middleware? (routes/middleware? hpi)
-        length (count item)
-        min-length
-        (get
-          routes/keyword-route-length
-          hpi length)]
-    {:context? context?
-     :route? route?
-     :http-method (when route? hpi)
-     :middleware? middleware?
-     :path (when (contains? routes/path-bearing-keywords hpi)
-             (uri/path spi))
-     :route-fn (when route? (nth item 2))
-     :raw-item item
-     :meta (meta item)
-     :sub-definition 
-     (when (and
-             (or route? context?)
-             (> length min-length))
-       (subvec item min-length))}))
+  (if (nil? item)
+    nil
+    (let [hpi (first item)
+          spi (second item)
+          context? (routes/context? hpi)
+          route? (routes/route? hpi)
+          middleware? (routes/middleware? hpi)
+          length (count item)
+          min-length
+          (get
+            routes/keyword-route-length
+            hpi length)]
+      {:context? context?
+       :route? route?
+       :http-method (when route? hpi)
+       :middleware? middleware?
+       :path (when (contains? routes/path-bearing-keywords hpi)
+               (uri/path spi))
+       :route-fn (when route? (nth item 2))
+       :raw-item item
+       :meta (meta item)
+       :sub-definition 
+       (when (and
+               (or route? context?)
+               (> length min-length))
+         (subvec item min-length))})))
 
 (defn signature-map-fn
   [i]
@@ -43,12 +45,13 @@
 
 (defn make-route
   [http-method path handler-fn middleware meta-data]
+  (let [real-path (uri/normalize-path (reverse path))]
   {:http-method http-method
-   :path path
-   :signature (map signature-map-fn path)
+   :path real-path
+   :signature (if (empty? real-path) '(nil) (map signature-map-fn real-path))
    :middleware middleware
    :handler-fn handler-fn
-   :meta meta-data})
+   :meta meta-data}))
 
 (defn process-compiled-routes
   [compiled-routes
@@ -60,7 +63,7 @@
       compiled-routes
       (make-route
         (:http-method current-stanza)
-        (conj stacked-path (:path current-stanza))
+        (conj stacked-paths (:path current-stanza))
         (:route-fn current-stanza)
         stacked-middleware
         (:meta current-stanza)))
@@ -71,7 +74,7 @@
   (if (nil? current-stanza)
     (pop stacked-routes)
     (if (:sub-definition current-stanza)
-      (cons (rest upcoming-routes) stacked-routes)
+      (conj stacked-routes (rest upcoming-routes))
       stacked-routes)))
 
 (defn process-stacked-paths
@@ -79,7 +82,7 @@
   (if (nil? current-stanza)
     (pop stacked-paths)
     (if (:sub-definition current-stanza)
-      (cons (:path current-stanza) stacked-paths)
+      (conj stacked-paths (:path current-stanza))
       stacked-paths)))
 
 (defn process-upcoming-routes
@@ -94,12 +97,11 @@
   (if (nil? current-stanza)
     (pop stacked-middleware)
     (if (:middleware? current-stanza)
-      (cons
-        (cons
-          (:raw-item current-stanza)
-          (first stacked-middleware))
-        (rest stacked-middleware))
-      stacked-middleware)))
+      (conj
+        (rest stacked-middleware)
+        (conj
+          (first stacked-middleware)
+          (:raw-item current-stanza))))))
 
 (defn destruct-definition
   "The core of Helmsman's integrated routing. Converts a Compojure like routing
@@ -108,27 +110,26 @@
   enable the ability to route before middleware and to route quickly based on
   Helmsman's URI handling."
   [definition]
-  (loop
-    [compiled-routes '()
-     cl-upcoming-routes definition
-     stacked-routes '()
-     stacked-paths '()
-     stacked-middleware '('())]
-    (let [level-empty (empty cl-upcoming-routes)]
+  (set
+    (loop
+      [compiled-routes '()
+       cl-upcoming-routes definition
+       stacked-routes '()
+       stacked-paths '()
+       stacked-middleware '( '())]
       (if
         (and
           (empty? stacked-routes)
           (empty? cl-upcoming-routes))
         compiled-routes
-        (let [current-stanza (about-stanza (first cl-upcoming-routes))
-              after-stanza-items (rest cl-upcoming-routes)
-              step-in (not (nil? (:sub-definition current-stanza)))]
+        (let [current-stanza (about-stanza (first cl-upcoming-routes))]
           (recur
             (process-compiled-routes
               compiled-routes current-stanza
               stacked-paths stacked-middleware)
             (process-upcoming-routes
-              current-stanza cl-upcoming-routes)
+              current-stanza cl-upcoming-routes
+              stacked-routes)
             (process-stacked-routes
               current-stanza cl-upcoming-routes stacked-routes)
             (process-stacked-paths
