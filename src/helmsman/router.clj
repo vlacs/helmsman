@@ -51,7 +51,8 @@
    :signature (if (empty? real-path) '(nil) (map signature-map-fn real-path))
    :middleware middleware
    :handler-fn handler-fn
-   :meta meta-data}))
+   :meta meta-data
+   :id (:id meta-data)}))
 
 (defn process-compiled-routes
   [compiled-routes
@@ -98,10 +99,13 @@
     (pop stacked-middleware)
     (if (:middleware? current-stanza)
       (conj
-        (rest stacked-middleware)
+        (pop stacked-middleware)
         (conj
           (first stacked-middleware)
-          (:raw-item current-stanza))))))
+          (:raw-item current-stanza)))
+      (if (not (nil? (:sub-definition current-stanza)))
+        (conj stacked-middleware (list))
+        stacked-middleware))))
 
 (defn destruct-definition
   "The core of Helmsman's integrated routing. Converts a Compojure like routing
@@ -112,11 +116,11 @@
   [definition]
   (set
     (loop
-      [compiled-routes '()
+      [compiled-routes (list)
        cl-upcoming-routes definition
-       stacked-routes '()
-       stacked-paths '()
-       stacked-middleware '( '())]
+       stacked-routes (list)
+       stacked-paths (list)
+       stacked-middleware (list (list))]
       (if
         (and
           (empty? stacked-routes)

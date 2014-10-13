@@ -74,15 +74,19 @@
   (prn-str request))
 
 (def our-routes
-  [^{:id ::home}
+  [[constantly :foobar]
+   ^{:id ::home}
    [:get "/" home-page]
    [:context "math"
+    [constantly :insane]
     ^{:id ::add}
     [:get "add/:one/:two" add-page]
     ^{:id ::subtract}
     [:get "subtract/:one/:two" subtract-page]
+    [constantly :annoying]
     ^{:id ::multiply}
     [:get "multiply/:one/:two" multiply-page]]
+   [constantly :a-tool]
    ^{:id ::debug}
    [:get "/debugging" debug-page]
    ])
