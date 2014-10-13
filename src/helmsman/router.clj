@@ -38,10 +38,41 @@
                (> length min-length))
          (subvec item min-length))})))
 
+(defn ordered-middleware
+  [middleware-stack]
+  (reduce
+    (fn [w c] (apply (partial conj w) c))
+    (list)
+    middleware-stack))
+
 (defn signature-map-fn
   [i]
   (if (keyword? i)
     \? (first i)))
+
+(defn make-signature-matcher-fn
+  [signature]
+  (fn [i]
+    (loop [x signature
+           y i]
+      (let [empty-x? (empty? x)
+            empty-y? (empty? y)]
+        (if
+          (and empty-x? empty-y?)
+          true
+          (let [fx (first x)
+                fy (first y)]
+          (if
+            (or empty-x?
+                empty-y?
+                (and
+                (not= fx \?)
+                (not= fy \?)
+                (not= fx fy)))
+            false
+            (recur
+              (pop x)
+              (pop y)))))))))
 
 (defn make-route
   [http-method path handler-fn middleware meta-data]
@@ -49,10 +80,14 @@
   {:http-method http-method
    :path real-path
    :signature (if (empty? real-path) '(nil) (map signature-map-fn real-path))
-   :middleware middleware
+   :middleware (ordered-middleware middleware)
    :handler-fn handler-fn
    :meta meta-data
-   :id (:id meta-data)}))
+   :id (:id meta-data)
+   :signature-match
+   :path-match
+   :full-route-fn
+   }))
 
 (defn process-compiled-routes
   [compiled-routes
