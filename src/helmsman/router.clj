@@ -222,9 +222,19 @@
             (process-stacked-middleware
               current-stanza stacked-middleware)))))))
 
+(defn signature-key-match
+  [base i]
+  ((if (set? base) contains? =)
+   base i))
+
 (defn generate-signature-tree
   [route-set]
   (reduce
-    (fn [i v] (assoc-in i (:signature v) v))
+    (fn [i v]
+      (let [sig (:signature v)
+            c (get-in i sig #{})]
+        (assoc-in
+          i sig
+          (conj c v))))
     {} route-set))
 
