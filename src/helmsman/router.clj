@@ -71,23 +71,69 @@
                 (not= fx fy)))
             false
             (recur
-              (pop x)
-              (pop y)))))))))
+              (rest x)
+              (rest y)))))))))
+
+(defn make-path-matcher-fn
+  [constant-path]
+  (fn [other-path]
+    (loop [x constant-path
+           y other-path]
+      (let [empty-x? (empty x)
+            empty-y? (empty y)]
+        (if (and empty-x? empty-y?)
+          true
+          (if
+            (or
+              empty-x?
+              empty-y?
+              (let [fx (first x)
+                    fy (first y)]
+                (and
+                  (not (keyword? fx))
+                  (not (keyword? fy))
+                  (not= fx fy))))
+            false
+            (recur
+              (rest x)
+              (rest y))))))))
+
+(defn make-route-fn
+  [handler-fn middleware-list]
+  (loop [handler-state handler-fn
+         middlewares middleware-list]
+    (if (empty? middlewares)
+      handler-state
+      (let [this-middleware (first middlewares)
+            mw-fn (first this-middleware)
+            mw-args (vec (rest this-middleware))
+            mw-beginning [mw-fn handler-state]]
+        (recur
+          (apply
+            partial
+            (if mw-args
+              (into
+                mw-beginning 
+                mw-args)
+              mw-beginning))
+          (rest middlewares))))))
 
 (defn make-route
   [http-method path handler-fn middleware meta-data]
-  (let [real-path (uri/normalize-path (reverse path))]
-  {:http-method http-method
-   :path real-path
-   :signature (if (empty? real-path) '(nil) (map signature-map-fn real-path))
-   :middleware (ordered-middleware middleware)
-   :handler-fn handler-fn
-   :meta meta-data
-   :id (:id meta-data)
-   :signature-match
-   :path-match
-   :full-route-fn
-   }))
+  (let [real-path (uri/normalize-path (reverse path))
+        signature (if (empty? real-path)
+                    '(nil) (map signature-map-fn real-path))
+        middleware (ordered-middleware middleware)]
+    {:http-method http-method
+     :path real-path
+     :signature signature
+     :middleware middleware 
+     :handler-fn handler-fn
+     :full-route-fn (make-route-fn handler-fn middleware)
+     :meta meta-data
+     :id (:id meta-data)
+     :signature-matcher-fn (make-signature-matcher-fn signature)
+     :path-matcher-fn (make-path-matcher-fn real-path)}))
 
 (defn process-compiled-routes
   [compiled-routes
@@ -175,4 +221,10 @@
               current-stanza stacked-paths)
             (process-stacked-middleware
               current-stanza stacked-middleware)))))))
+
+(defn generate-signature-tree
+  [route-set]
+  (reduce
+    (fn [i v] (assoc-in i (:signature v) v))
+    {} route-set))
 
