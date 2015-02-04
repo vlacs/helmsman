@@ -3,7 +3,9 @@
     [helmsman :as h]
     [helmsman.router :as router]
     [helmsman.navigation :as nav]
-    [helmsman.uri :as uri]))
+    [helmsman.uri :as uri]
+    [ring.middleware.keyword-params]
+    [ring.middleware.cookies]))
 
 (defn basic-html-doc
   "Creates a basic template for an HTML page."
@@ -74,24 +76,23 @@
   (prn-str request))
 
 (def our-routes
-  [[constantly :foobar]
+  [[ring.middleware.keyword-params/wrap-keyword-params]
+   [ring.middleware.cookies/wrap-cookies]
    ^{:id ::home}
    [:get "/" home-page]
    [:context "math"
-    [constantly :insane]
     ^{:id ::add}
     [:get "add/:one/:two" add-page]
     ^{:id ::subtract}
     [:get "subtract/:one/:two" subtract-page]
-    [constantly :annoying]
     ^{:id ::multiply}
     [:get "multiply/:one/:two" multiply-page]]
-   [constantly :a-tool]
    ^{:id ::debug}
    [:get "/debugging" debug-page]
    ])
 
 (comment
+  (def routing-map (router/destruct-definition our-routes))
   (def application (h/compile-routes our-routes))
   (def meta-data (h/compile-meta our-routes)))
 

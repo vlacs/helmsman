@@ -1,9 +1,7 @@
 (ns helmsman.router
   (:require [helmsman.uri :as uri]
-            [helmsman.routes :as routes]))
-
-;;; This is needed to make the pair of these functions recursive.
-(declare about-stanza about-vector)
+            [helmsman.routes :as routes]
+            [helmsman.request :as h-request]))
 
 (defn about-stanza
   "Takes a helmsman definition stanza and turns it into something more useful
@@ -41,14 +39,12 @@
 (defn ordered-middleware
   [middleware-stack]
   (reduce
-    (fn [w c] (apply (partial conj w) c))
+    (fn [w c]
+      (if (empty? c)
+        w
+        (apply (partial conj w) c)))
     (list)
     middleware-stack))
-
-(defn signature-map-fn
-  [i]
-  (if (keyword? i)
-    \? (first i)))
 
 (defn make-signature-matcher-fn
   [signature]
@@ -110,19 +106,14 @@
             mw-beginning [mw-fn handler-state]]
         (recur
           (apply
-            partial
-            (if mw-args
-              (into
-                mw-beginning 
-                mw-args)
-              mw-beginning))
+            (partial mw-fn handler-state)
+            mw-args)
           (rest middlewares))))))
 
 (defn make-route
   [http-method path handler-fn middleware meta-data]
   (let [real-path (uri/normalize-path (reverse path))
-        signature (if (empty? real-path)
-                    '(nil) (map signature-map-fn real-path))
+        signature (uri/path->signature real-path)
         middleware (ordered-middleware middleware)]
     {:http-method http-method
      :path real-path
@@ -222,19 +213,14 @@
             (process-stacked-middleware
               current-stanza stacked-middleware)))))))
 
-(defn signature-key-match
-  [base i]
-  ((if (set? base) contains? =)
-   base i))
-
-(defn generate-signature-tree
-  [route-set]
-  (reduce
-    (fn [i v]
-      (let [sig (:signature v)
-            c (get-in i sig #{})]
-        (assoc-in
-          i sig
-          (conj c v))))
-    {} route-set))
+(defn create-ring-handler
+  [definition]
+  (let [routing-set (destruct-definition definition)]
+    (fn ring-handler
+      [request]
+      (let [request (h-request/default-wrappers request)]
+        ((get-in request [:helmsman :current-route :full-route-fn]
+                 ;;; Figure out a better 404 method than this.
+                 (constantly {:status 404 :body "Not found."}))
+         request)))))
 

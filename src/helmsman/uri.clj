@@ -157,3 +157,14 @@
                (get-in request [:helmsman :uri-path])
                destination-uri-path))
     assemble-fn-args))
+
+(defn signature-map-fn
+  [i]
+  (if (keyword? i)
+    \? (first i)))
+
+(defn path->signature
+  [path]
+  (if (empty? path)
+    '(nil) (map signature-map-fn path)))
+

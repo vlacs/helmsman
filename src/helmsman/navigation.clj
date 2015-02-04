@@ -1,7 +1,6 @@
 (ns helmsman.navigation
   (:require
     [clojure.set]
-    [helmsman.tree :as tree]
     [helmsman.uri :as uri]
     [helmsman.navigation.preds :as preds]))
 
