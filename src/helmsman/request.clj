@@ -7,7 +7,7 @@
   (vec
     (concat
       [:helmsman]
-      (if (string? i)
+      (if (keyword? i)
         [i] i))))
 
 (defn wrap-attribute

@@ -1,5 +1,6 @@
 (ns helmsman.example-site
   (:require 
+    [ring.adapter.jetty]
     [helmsman :as h]
     [helmsman.router :as router]
     [helmsman.navigation :as nav]
@@ -91,8 +92,15 @@
    [:get "/debugging" debug-page]
    ])
 
-(comment
-  (def routing-map (router/destruct-definition our-routes))
-  (def application (h/compile-routes our-routes))
-  (def meta-data (h/compile-meta our-routes)))
+(defn start-server
+  [port definition]
+  (ring.adapter.jetty/run-jetty
+    (helmsman/create-ring-handler definition)
+    {:port port
+     :join? false}))
+
+(comment  
+  (def routing-set (router/destruct-definition our-routes))
+  (start-server 8080 our-routes)
+  )
 

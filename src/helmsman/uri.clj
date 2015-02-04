@@ -138,11 +138,17 @@
 (defn relative-uri
   [from-path to-path]
   (let [divergence (path-divergence from-path to-path)
+        common (common-path from-path to-path)
         u-levels (- (count (first divergence)) 1)]
-    (if (<= u-levels 0)
-      to-path
-      (into
-        (vec (repeat u-levels ".."))
+    (vec
+      (concat
+        (if (<= u-levels 0)
+          (concat
+            ["."]
+            (if (and (= u-levels -1)
+                     (> (count common) 0))
+              [(last common)] []))
+          (vec (repeat u-levels "..")))
         (second divergence)))))
 
 (defn relative-uri-str
