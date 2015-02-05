@@ -1,4 +1,4 @@
-(defproject org.vlacs/helmsman "0.2.6"
+(defproject org.vlacs/helmsman "1.0.0-SNAPSHOT"
   :description "This is a library for describing the structure of a web appliction.
                This way, we have uris and data associated directly with routes.
                This is nice for generating navigation or applying middleware to
@@ -16,6 +16,5 @@
   :pedantic? :warn
   :profiles {:dev {:source-paths ["dev"]
                    :dependencies [[org.clojure/tools.nrepl "0.2.3"]
-                                  [org.clojure/tools.namespace "0.2.4"]
                                   [ring-mock "0.1.5"]]}})
 

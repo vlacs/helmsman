@@ -1,237 +1,120 @@
 # Helmsman
-[![Build Status](https://travis-ci.org/vlacs/helmsman.png?branch=master)](https://travis-ci.org/vlacs/helmsman) [![Coverage Status](https://coveralls.io/repos/vlacs/helmsman/badge.png?branch=master)](https://coveralls.io/r/vlacs/helmsman?branch=master)
-===============
-<a title="By Steering_wheel_ship_1.png: Lidingo derivative work: Arnaud Ramey (Steering_wheel_ship_1.png) [CC-BY-SA-3.0 (http://creativecommons.org/licenses/by-sa/3.0) or GFDL (http://www.gnu.org/copyleft/fdl.html)], via Wikimedia Commons" href="http://commons.wikimedia.org/wiki/File%3ASteering_wheel_ship.svg"><img width="128" alt="Steering wheel ship" src="http://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Steering_wheel_ship.svg/128px-Steering_wheel_ship.svg.png"/></a>
 
-Helmsman steers your app by letting you compose Compojure routes and the structure of your
-application at the same time by holding on to data you use to create routes in
-the first place and leveraging it.
+## Brief background
+Helmsman is a routing library for Ring. At first, Helmsman was built on top of
+Compojure, utilizing all the non-macro underworkings for creating routes.
+Quickly did I realize that between doing that and using zippers for traversing
+a definition was brutal. Since the project Helmsman was initially part of
+a project that died of, it slowly accumulated some dust until I was inspired
+and motivated to finish what I started as once again, I needed a half decent
+routing library for a different project that still supported all of your typical
+Ring middlewares.
 
-Here is the latest leiningen dependancy string for your project.clj file:
+## The problems
+There were some very specific things that I wanted to solve in Helmsman that
+I felt that Compojure did not solve.
 
+#### Routes as data
+Compojure builds routes up by using macros. To add insult to injury, once the
+routes have been "composed" together you have a handler without anything
+special and the real trick comes when you say "How do I link to another route
+without redefining all of our routes?" The simple fact is that with Compojure,
+you can't, so you natural either have nasty code or a shoddy workaround.
+
+Helmsman uses strictly data to create a Ring handler. No messing with macros,
+just get down and dirty with vectors. As a result, the same data used to make
+the Ring handler can be used to generate relative URLs based on routes that
+actually exist in your application.
+
+### Routing before processing
+One thing that blows my mind more than anything else is how when using
+Compojure, you need to load up the world of Middleware before routes are even
+checked to see if the request path matches the route path. As a result, a bunch
+of Middleware can run even if no route is encountered.
+
+Since Helmsman compiles a structure of what all the routes look like, we store
+all of the middleware required for any given route. As a result, we can check to
+see if the request and route paths match before executing the middleware. In
+fact Helmsman stores a fn that already has the route fn wrapped in all the
+middleware after the route gets checked, so processing at the time of the
+request is kept to a minimum.
+
+### Alternate routing methods
+As it stands, Compojure and other routing libraries route in one way and one way
+only. Well, as it stands right now, so does Helmsman but that's not intended to
+be a long term goal. Code exists that could accelerate routing time but is on
+hold for the time being.
+
+### Leveraging your routes
+Compojure only puts your routes together, it doesn't actually let you leverage
+it. While strict fn-based routing might be simple and okay, it doesn't provide
+any tools for navigation. As a result, you're being routed without knowing
+anything about the routing itself.
+
+Helmsman allows for Clojure meta data to be attached to individual routes that
+will be included in the routing set that Helmsman generates. The biggest need
+was to be able to identify a route using a keyword. So you can write a route
+like this to attach data to it:
 ```clojure
-[org.vlacs/helmsman "0.2.6"]
+(def my-routes [^{:id :home}[:get "/" {:status 200 :body "Home page."}]])
 ```
 
-## Running Tests
-You can build the necessary dependencies and run the tests with one command.
+Helmsman breaks down paths for every route when the routing set is compiled and
+Helmsman offers facilities via the ```helmsman.uri``` namespace to create
+relative URIs as well as the ```helmsman.navigation``` namespace to "find" other
+routes in your application as opposed to redefining them. Also, once a request
+has been routed, Helmsman pulls aside the current route and puts it in the
+request map at ```[:helmsman :current-route]``` for easy usage. Helmsman puts
+a whole bunch of useful data derived from the application definition in the
+```:helmsman``` key of the request map to make a developer's life a little
+easier.
 
-```$ sh test.sh```
+## project.clj
+The latest and greatest version of Helmsman can be used with the following
+dependency string for a Leiningen project.
+```clojure
+[org.vlacs/helmsman "1.0.0-SNAPSHOT"]
+```
+
+It can be aquired on Clojars once this version has been released.
 
 ## What does Helmsman do?
-
-A website using Helmsman is designed to process a series of nested vectors. Each vector
-is a Compojure-like component that is getting composed together. The goal is to make
-writing routes and applying middleware to be one in the same thing in addition to
-having a system that allows you to tie meta-data (real Clojure meta data,) to
-any particular portion of the application, but not losing it when the routes are
-composed together and eventually executed. In particular, knowing about URIs
-associated with different routes will enable you to be able to create reliable uri
-for links; This includes relative URIs (which are prefered) and absolute URIs.
-
-## Example web application
-There has been some interest in some example code that shows how Helmsman works, so
-I created a repo with an on-going example of how you can use Helmsman. Initially
-this example was going to be wrapped in a separate git repo. However, it makes
-more sense to add it to Helmsman itself so we can use the example for testing as
-well (and kill two birds with one stone.)
-
-It's very easy to spin up the example. All you need to do is spin up a REPL
-inside the Helmsman Leiningen project and run ```(reset)``` .
-
-Now that's nice that it spins up an example, but we actually want to see what
-we're using to do it and there are two files that do this.
-
-First of all, ```dev/user.clj``` contains our ```tools.namespace``` workflow for
-reloading code which handles, initializing, starting, and stopping our example.
-We also have ```dev/helmsman/example-site.clj``` which contains all the logic
-to execute the functions of our example website.
-
-# Route and handler creation
-
-## Routes
-Helmsman routes are very similar to compojures in design. The difference is that
-we try to leverage data structures that we can work with whenever possible. As
-a result, every route will be created like this:
-```clojure
-[:http-method "/some/compojure/uri" some-handler-fn ... ]
-```
-
-Valid http methods are the same as compojure and are defined in Helmsman as
-the following set as defined in Helmsman's code.
-```clojure
-#{:get :head :post
-  :put :delete :trace
-  :options :connect :patch}
-```
-
-## Nested routes
-Nested routes use the uri of the previous routes and contexts by prepending it
-to their own. That way routes are built up, uri segments aren't repeated when
-a definition is created. It also allows applications to define how their segment
-of a web application will look without knowing how the layers above it will.
-
-Much like compojure, a context can be applied by using the :context keyword. It
-behaves exactly like a route, except it doesn't have a handler and is written
-like a route but with two arguments, like this:
-```clojure
-[:context "/some/path"
-  [:get "/testing" some-handler]
-  [:get "/testing2" some-other-handler]]
-```
-
-Which would result in two routes: /some/path/testing and /some/path/testing1.
-
-## Where are my request bindings?!
-Matt Oquist brought up a really good point with me the other day that in Compojure,
-routes automagically let you destructure the request when you define the handler. In
-response I wrote a macro that uses Compojure's own let-request macro that does
-just that. To use it, define your handlers like so:
-```clojure
-(helmsman/defhandler
-  [:as request]
-  (do-something-with request))
-```
-
-## Files and resources
-
-There are also other route-like keywords you can use that create particular
-kinds of routes. For example, you can use resources in the very same way you can
-in Compojure.
-```clojure
-;;; You can use resources based on your class path.
-[:resources "/public" {:root "app-files/static"}]
-;;; Or files based on the systems root.
-[:files "/some-dir" {:root "/var/some-app/appdata"}]
-```
-
-## Middleware
-Middleware in Helmsman is the same as though you were calling it within the
-context of the thread (->) macro. It also applies the middleware to all the
-routes that are at in this level or within deeper levels with respect to the
-location the middleware is being applied.
-
-For example, using middleware looks like this:
-```clojure
-[any-middleware-fn arg-1 arg-2 ... arg-n]
-```
-
-So if you were to do something like this, the second route ```/bar``` would have the
-middleware applied to it, where the first and last, ```/``` and ```/foo```
-respectively  will not.
-```clojure
-[:get "/" (constantly "Hello world. :)")
-  [:get "/bar" predefined-handler]
-  [some-middleware arg-1 arg-2 arg-n]
-  [:get "/foo" another-handler]]
-```
-
-## Getting your handler
-Well, you need something to give Jetty, Immutant, or whatever you use for a web
-server. There is a single function that handles this for you and it's called
-```helmsman/compile-routes``` and it will return a single handler function like
-Compojure does, which you can just hand to your web server. Helmsman does apply
-its own middleware to your application in order to add the map on the
-```:helmsman``` key of the request map. It contains meta data and URI
-information which will be touched upon next.
-
-# Leveraging Helmsman beyond routes
-Helmsman is nifty in the sense that once you define your routes, meta-data is
-accessible to everything and on top of that we parse the uri from the request so
-given where we are and the routes we can go, we can relatively easily create
-URIs to anything we're aware of if there is meta-data that uniquely idenfies
-a route.
-
-## Getting information from meta-data
-Meta data is stored by default, in only one place. The ring request when
-requests come in to be processed. Optionally, you can compile the meta-data
-before compiling the routes and define them somewhere, but there are cases were
-it is important to have this data accessible from the request.
-
-If the meta-data is in the request, you can get it by calling:
-```clojure
-(get-in request [:helmsman :all-meta])
-```
-
-With the meta-data you can either use predicates to find a single item or to
-limit the size of the set. Both of these rely on the fn
-```helmsman.navigation/meta-filter``` which really is just a wrapper for
-```clojure.set/select``` . ```meta-filter``` returns a new set. You can get
-a single item based on a predicate by calling
-```helmsman.navigation/meta-get-unique``` which takes the same parameters as
-meta-filter, the meta-data set and the predicate. What you want out of the map
-completely depends on the meta data you attach to your routes. So if you had an
-:id field in some meta-data items, you could do the following to get one or
-many:
-```clojure
-(helmsman.navigation/meta-filter
-  meta-data
-  (helmsman.naviagtion.preds/with :id "some-id"))
-```
-
-For that particular example :id is a special keyword so we have a function
-dedicated to getting a single item with a value on that key:
-```clojure
-(helmsman.navigation/meta-with-id meta-data "id-name")
-```
-
-Every route has a meta data item called ```:uri-path``` which get pulled out
-of the definition that created it. These paths can be used to make relative
-links which will be touched on next.
-
-Note: You can combine predicates in clojure by using
-```clojure.core/every-pred``` to merge your predicates into a single one and all
-of helmsman's predefined predicates for navigation will be in
-```helmsman.navigation.preds``` .
-
-## Relative URIs made simple
-Given two distinct URI under the same hostname, we can reliable determine how
-far up the tree we need to go before we start going back down it on the same
-point as the destination URI. Helmsman can do that, you just need to know where
-you are and where you're going, if you don't have either of those, you're lost.
-
-Helmsman generates URIs as a vector with each item being a URI segment.
-Internally helmsman uses a two-level vector to handle special cases for
-things like nesting routes and contexts, but you'll never encounter them. All
-URIs that come out of helmsman (before it turns them into a string,) are
-flattened vectors of strings, nothing more.
-
-For example, you have two addresses on the same host;
-```http://www.somerandomhost.com/working/on/the/railroad``` and
-```http://www.somerandomhost.com/working/with/people``` . The first contains the
-URI ```/working/on/the/railroad``` which Helmsman turns into
-```["working" "on" "the" "railroad"]``` . Same thing with the second address. It
-has the URI ```/working/with/people``` which Helmsman turns into 
-```["working" "with" "people"]``` .
-
-Using these uri paths (vector representation of a URI) we can very easily make
-a relative URI either in helmsman format or in string format.
-```clojure
-(helmsman.uri/relative-uri ["working" "on" "the" "railroad"]
-                           ["working" "with" "people"])
-;;; Returns [".." ".." "with" "people"]
-(helmsman.uri/assemble [".." ".." "with" "people"])
-;;; Returns the string representation "../../with/people"
-```
-
-The ```helmsman.uri/assemble``` fn can take optional parameters that replace
-keyworded uri segments. So you can do things like this as well:
+Simply put, Helmsman at its heart lets you turn data into a Ring handler. It
+does many of the things other routing libraries like Compojure do, but Helmsman
+is built up using strictly a data structure.
 
 ```clojure
-(helmsman.uri/assemble ["some" "uri" "over" :location]
-  :location "there")
-  
-;;; Results in "some/uri/over/there" 
+(def my-routes
+  [[:get "/" {:status 200 :body "Hello world"}]])
 ```
 
-Variable uri segments are handled by helmsman when uri-path is generated for
-each route, so a statement like ```[:get "/some/cool/:stuff/:here" ...]```
-with automatically have a :uri-path meta data item that contains
-```["some" "cool" :stuff :here]``` which we can use to make URIs.
+You can have may routes at the same level, or routes in nested levels.
+```clojure
+(def my-routes
+  [[:get "/" {:status 200 :body "Hello world"}]
+   [:get "/page-2" {:status 200 :body "Another page!"}]
+   [:get "/user" {:status 404 :body "Nothing here."}
+    [:get "/:user-id {:status 200 :body "Some user page."]]])
+```
+
+You can nest routes without defining a route itself by using a ```:context```
+and we can use any HTTP method supported by Ring and the web server by using
+keywords such as ```:post```, ```:options```, ```:get```, etc.
+```clojure
+(def my-routes
+  [[:context "/user/:user-id"
+    [:get "/about" {:status 200 :body "Something."}]
+    [:post "/edit" {:status 200 :body "Edit something."}]]])
+```
+
+# TODO: Finish the new and improved README
+### Also have someone proof read it.
 
 ## License
 
-Copyright VLACS© 2014
+### Copyright and credits
+ - VLACS© <jdoane@vlacs.org> 2014
+ - Jon Doane <jrdoane@gmail.com> 2014-2015
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
