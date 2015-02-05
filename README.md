@@ -4,40 +4,52 @@
 Helmsman is a routing library for Ring. At first, Helmsman was built on top of
 Compojure, utilizing all the non-macro underworkings for creating routes.
 Quickly did I realize that between doing that and using zippers for traversing
-a definition was brutal. Since the project Helmsman was initially part of
-a project that died of, it slowly accumulated some dust until I was inspired
-and motivated to finish what I started as once again, I needed a half decent
-routing library for a different project that still supported all of your typical
-Ring middlewares.
+a definition was brutal to manage or even understand. Since the project
+Helmsman was initially part of another project, Galleon, which died off, it
+slowly accumulated some dust until I was inspired and motivated to finish what
+I started in my own time as it's something I feel rather strongly about. Like
+in the early days with Galleon, I once again needed a *half decent* routing
+library for a different project, Informer, that still supported all of your
+typical Ring middlewares (as much as I personally disagree with them).
 
 ## The problems
 There were some very specific things that I wanted to solve in Helmsman that
-I felt that Compojure did not solve.
+I felt that Compojure and many other routing libraries did not solve.
 
-#### Routes as data
-Compojure builds routes up by using macros. To add insult to injury, once the
-routes have been "composed" together you have a handler without anything
-special and the real trick comes when you say "How do I link to another route
-without redefining all of our routes?" The simple fact is that with Compojure,
-you can't, so you natural either have nasty code or a shoddy workaround.
+### Routes as data
+As Clojure developers, we love data. It only makes sense for our routes to be
+data as well. Compojure builds routes up by using macros. To add insult to
+injury, once the routes have been "composed" together you have a handler
+without anything special and the real trick comes when you say "How do I link
+to another route without redefining all of our routes?" The simple fact is that
+with Compojure, you can't, so you're stuck with the options of hacking up
+Compojure to do what you want (like I initially did, which was insane) or just
+biting the bullet and re-inventing the wheel.
+
+Needless to say, I tried using the wheel I already had and it was a pretty
+cruddy wheel, so I set off to build a better one.
 
 Helmsman uses strictly data to create a Ring handler. No messing with macros,
-just get down and dirty with vectors. As a result, the same data used to make
-the Ring handler can be used to generate relative URLs based on routes that
-actually exist in your application.
+you just get down and dirty with vectors without any insanity to build them up.
+As a result, the same data used to make the Ring handler can be used for
+anything else in your application inside or outside of a Ring request.
 
 ### Routing before processing
 One thing that blows my mind more than anything else is how when using
-Compojure, you need to load up the world of Middleware before routes are even
+Compojure, it needs to load up the world of Middleware before routes are even
 checked to see if the request path matches the route path. As a result, a bunch
-of Middleware can run even if no route is encountered.
+of Middleware can run even if no route is encountered. For a web server handling
+many ajax requests at once, that could really hurt you in terms of performance
+for simply figuring out that you got a 404.
 
-Since Helmsman compiles a structure of what all the routes look like, we store
-all of the middleware required for any given route. As a result, we can check to
-see if the request and route paths match before executing the middleware. In
-fact Helmsman stores a fn that already has the route fn wrapped in all the
-middleware after the route gets checked, so processing at the time of the
-request is kept to a minimum.
+Since Helmsman compiles a structure of what all the routes look like ahead of
+time, we store all of the middleware required for any given route along with
+any information Helmsman has. As a result, we can check to see if the request
+and route paths match before executing any middleware. In fact Helmsman stores
+a fn that already has the route fn wrapped in all the middleware before the
+web server is even brought up. So after the paths get checked, Helmsman simply
+calls the fn without any extra processing, minimizing the amount of work done at
+the time of the request.
 
 ### Alternate routing methods
 As it stands, Compojure and other routing libraries route in one way and one way
@@ -47,9 +59,9 @@ hold for the time being.
 
 ### Leveraging your routes
 Compojure only puts your routes together, it doesn't actually let you leverage
-it. While strict fn-based routing might be simple and okay, it doesn't provide
-any tools for navigation. As a result, you're being routed without knowing
-anything about the routing itself.
+them. While strict fn-based routing might be simple and okay, it doesn't provide
+any tools for navigation or using the routes themselves to do things. As a
+result, you're being routed without knowing anything about the routing itself.
 
 Helmsman allows for Clojure meta data to be attached to individual routes that
 will be included in the routing set that Helmsman generates. The biggest need
@@ -69,7 +81,16 @@ a whole bunch of useful data derived from the application definition in the
 ```:helmsman``` key of the request map to make a developer's life a little
 easier.
 
-## project.clj
+## The biggest limitation/perk of Helmsman
+The idea of a "wild card" character in Helmsman dies. In order to be able to
+handle pathing effectively, we can't support something as abiguous as a wild
+card and be able to effectively generate URIs to and from those locations. You
+can still use named parameters in URIs such as ```"/this/:item/set-id/:id"```
+but you can't do something like ```"/this/*/:item/set-id/:id```. The upside to
+this is that it enforces a stricter URI convention that encourages specfic
+URIs over ambiguous ones.
+
+## Dependencies?!
 The latest and greatest version of Helmsman can be used with the following
 dependency string for a Leiningen project.
 ```clojure
@@ -78,11 +99,12 @@ dependency string for a Leiningen project.
 
 It can be aquired on Clojars once this version has been released.
 
-## What does Helmsman do?
-Simply put, Helmsman at its heart lets you turn data into a Ring handler. It
-does many of the things other routing libraries like Compojure do, but Helmsman
-is built up using strictly a data structure.
+## Using Helmsman to do things
 
+Here are some basic examples of how routes can be written. I will create some
+better tutorials once the libraries has been polished up.
+
+This is a hello world route.
 ```clojure
 (def my-routes
   [[:get "/" {:status 200 :body "Hello world"}]])
