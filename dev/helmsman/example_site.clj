@@ -5,8 +5,11 @@
     [helmsman.router :as router]
     [helmsman.navigation :as nav]
     [helmsman.uri :as uri]
+    [ring.util.response]
     [ring.middleware.keyword-params]
     [ring.middleware.cookies]))
+
+(def ring-response ring.util.response/response)
 
 (defn basic-html-doc
   "Creates a basic template for an HTML page."
@@ -37,8 +40,9 @@
 
 (h/defhandler home-page
   [:as request]
-  (home-page-body
-    request))
+  (ring-response
+    (home-page-body
+      request)))
 
 (defn punt
   "Converts a string to an integer, basic wrapper."
@@ -53,28 +57,32 @@
 
 (h/defhandler add-page
   [one two :as request]
-  (str "Result: " (+ (punt one) (punt two))
-       "<br />"
-       (home-page-body request)
-       (return-home request)))
+  (ring-response
+    (str "Result: " (+ (punt one) (punt two))
+         "<br />"
+         (home-page-body request)
+         (return-home request))))
 
 (h/defhandler subtract-page
   [one two :as request]
-  (str "Result: " (- (punt one) (punt two))
-       "<br />"
-       (home-page-body request)
-  (return-home request)))
-  
+  (ring-response
+    (str "Result: " (- (punt one) (punt two))
+         "<br />"
+         (home-page-body request)
+         (return-home request))))
+
 (h/defhandler multiply-page
   [one two :as request]
-  (str "Result: " (* (punt one) (punt two))
-       "<br />"
-       (home-page-body request)
-       (return-home request)))
+  (ring-response
+    (str "Result: " (* (punt one) (punt two))
+         "<br />"
+         (home-page-body request)
+         (return-home request))))
 
 (h/defhandler debug-page
   [:as request]
-  (prn-str request))
+  (ring-response
+    (prn-str request)))
 
 (def our-routes
   [[ring.middleware.keyword-params/wrap-keyword-params]
