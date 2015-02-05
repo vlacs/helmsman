@@ -102,7 +102,7 @@ It can be aquired on Clojars once this version has been released.
 ## Using Helmsman to do things
 
 Here are some basic examples of how routes can be written. I will create some
-better tutorials once the libraries has been polished up.
+better tutorials once the library has been polished up.
 
 This is a hello world route.
 ```clojure
@@ -116,7 +116,7 @@ You can have may routes at the same level, or routes in nested levels.
   [[:get "/" {:status 200 :body "Hello world"}]
    [:get "/page-2" {:status 200 :body "Another page!"}]
    [:get "/user" {:status 404 :body "Nothing here."}
-    [:get "/:user-id {:status 200 :body "Some user page."]]])
+    [:get "/:user-id" {:status 200 :body "Some user page."]]])
 ```
 
 You can nest routes without defining a route itself by using a ```:context```
