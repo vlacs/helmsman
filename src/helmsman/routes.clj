@@ -71,30 +71,4 @@
   [method]
   (= method :not-found))
 
-(defn cons-static
-  [static-fn path arg-seq]
-  (apply (partial static-fn path) arg-seq))
-
-(def cons-resources
-  (partial cons-static compojure.route/resources))
-
-(def cons-files
-  (partial cons-static compojure.route/files))
-
-(defn cons-route
-  [method uri route-fn]
-  (compojure/make-route
-    ;;; rewrite :any to nil for compojure.
-    (if (any-http-method? method)
-      nil method)
-    uri
-    route-fn))
-
-(defn rewrite-uri
-  [route uri-path]
-  (assoc route 1 uri-path))
- 
-(defn combine
-  [& routes-vec]
-  (apply compojure/routes (vec routes-vec)))
 
