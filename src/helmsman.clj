@@ -7,7 +7,8 @@
 (def create-ring-handler router/create-ring-handler)
 
 (defmacro handler
-  "Create a handler that uses compojure destructuring syntax."
+  " *** DEPRECATED, removing Compojure dep soon.  ***
+  Create a handler that uses compojure destructuring syntax."
   [bindings & body]
   `(fn [request#]
      (compojure.core/let-request

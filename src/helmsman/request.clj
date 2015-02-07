@@ -81,3 +81,60 @@
       (wrap-routing-set routing-set)
       wrap-current-route))
 
+(defn get-in-request
+  [request key-or-keys]
+  (get-in
+    request 
+    (concat
+      [:helmsman]
+      (if (keyword? key-or-keys)
+        [key-or-keys] key-or-keys))))
+
+(defn get-current-route
+  [request]
+  (get-in-request request :current-route))
+
+(defn get-routing-set
+  [request]
+  (get-in-request request :routing-set))
+
+(defn get-id-indexed-routing-set
+  [request]
+  (get-in-request request :routing-set))
+
+(defn nice-keys
+  [set-index single-key?]
+  (if single-key?
+    (apply
+      merge
+      (map
+        (fn [i] {(second (first i)) (second i)})
+        set-index))
+    set-index))
+
+(defn index-routes
+  [routing-set index-on]
+  (let [single-key? (keyword? index-on)]
+    (-> routing-set
+        (clojure.set/index
+          (if single-key? [index-on] index-on))
+        (nice-keys single-key?))))
+
+(defn get-index-routes
+  "Direct request wrapper for index-routes."
+  [request index-on]
+  (index-routes (get-routing-set request) index-on))
+
+(defn get-route-by-id
+  [request route-id]
+  (get (index-routes (get-routing-set request) :id) route-id))
+
+(defn get-relative-uri
+  "Based of the current path inside any given request, create a relative uri
+  to another route based on a meta-data id."
+  [request destination-id]
+  (uri/relative-uri
+    (:path (get-current-route request))
+    (:path (get-route-by-id request destination-id))))
+ 
+
