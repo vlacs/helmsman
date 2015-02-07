@@ -20,11 +20,11 @@
 (defn home-page-body
   "Creates the basic body for a basic navigational page."
   [request]
-  (let [add-uri (nav/id->uri request ::add
+  (let [add-uri (nav/assemble-relative-uri request ::add
                              :one 4 :two 8)
-        sub-uri (nav/id->uri request ::subtract
+        sub-uri (nav/assemble-relative-uri request ::subtract
                              :one 3 :two 13)
-        mult-uri (nav/id->uri request ::multiply
+        mult-uri (nav/assemble-relative-uri request ::multiply
                               :one 23 :two 7)]
     (str "<h1>Welcome to the Helmsman Example!</h1>
          <ul>
@@ -52,7 +52,7 @@
   "Creates an a tag with a link back to the home page."
   [request]
   (str "<a href=\""
-       (nav/id->uri request ::home)
+       (nav/assemble-relative-uri request ::home)
        "\">Go Home</a>"))
 
 (h/defhandler add-page
