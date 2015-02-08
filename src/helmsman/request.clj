@@ -1,6 +1,7 @@
 (ns helmsman.request
   (:require
-    [helmsman.uri :as uri]))
+    [helmsman.uri :as uri]
+    [ring.middleware.params]))
 
 (defn prepare-keys
   [i]
@@ -79,7 +80,9 @@
       wrap-path
       wrap-signature
       (wrap-routing-set routing-set)
-      wrap-current-route))
+      wrap-current-route
+      wrap-uri-params
+      ))
 
 (defn get-in-request
   [request key-or-keys]

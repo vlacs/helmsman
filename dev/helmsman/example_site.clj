@@ -97,7 +97,7 @@
     ^{:id ::multiply}
     [:get "multiply/:one/:two" multiply-page]]
    ^{:id ::debug}
-   [:get "/debugging" debug-page]
+   [:get "/debugging/:a/:b" debug-page]
    ])
 
 (defn start-server
@@ -108,6 +108,7 @@
      :join? false}))
 
 (comment  
+  (use 'clojure.repl 'clojure.pprint)
   (def routing-set (router/destruct-definition our-routes))
   (start-server 8080 our-routes)
   )
