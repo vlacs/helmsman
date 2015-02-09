@@ -8,7 +8,7 @@ here](https://github.com/vlacs/helmsman/blob/f/raw-ring/doc/rationale.md).
 The latest and greatest version of Helmsman can be used with the following
 dependency string for a Leiningen project once 1.0 is uploaded to Clojars.
 ```clojure
-[org.vlacs/helmsman "1.0.0"]
+[org.vlacs/helmsman "1.0.0-alpha1"]
 ```
 
 ## Using Helmsman to do things
