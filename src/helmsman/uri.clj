@@ -157,3 +157,31 @@
   (if (empty? path)
     '(nil) (map signature-map-fn path)))
 
+(defn path-param-positions
+  "Takes in a definition path and maps integer vector positions with url
+  parameter names."
+  [defined-path]
+  (let [path-max-idx (- (count defined-path) 1)]
+    (loop
+      [pos 0
+       working-map {}]
+      (if (> pos path-max-idx)
+        working-map
+        (let [current-item (get defined-path pos)]
+          (recur
+            (inc pos)
+            (if (keyword? current-item)
+              (assoc working-map pos current-item)
+              working-map)))))))
+
+(defn extract-path-params
+  [request-path param-positions]
+  (into
+    {}
+    (map
+      (fn [i]
+        (let [pos (first i)
+              param-name (second i)]
+          [param-name (get request-path pos)]))
+      param-positions)))
+

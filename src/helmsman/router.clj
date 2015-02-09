@@ -95,10 +95,12 @@
 (defn make-route
   [http-method path handler-fn middleware meta-data]
   (let [real-path (uri/normalize-path (reverse path))
+        path-param-positions (uri/path-param-positions real-path)
         signature (uri/path->signature real-path)
         middleware (ordered-middleware middleware)]
     {:http-method http-method
      :path real-path
+     :path-param-positions (uri/path-param-positions real-path)
      :signature signature
      :middleware middleware 
      :handler-fn handler-fn

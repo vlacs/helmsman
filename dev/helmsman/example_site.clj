@@ -9,6 +9,7 @@
     [ring.middleware.keyword-params]
     [ring.middleware.cookies]))
 
+(def last-request (atom nil))
 (def ring-response ring.util.response/response)
 
 (defn basic-html-doc
@@ -81,6 +82,7 @@
 
 (h/defhandler debug-page
   [:as request]
+  (reset! last-request request)
   (ring-response
     (prn-str request)))
 

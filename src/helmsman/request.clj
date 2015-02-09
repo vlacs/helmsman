@@ -69,6 +69,15 @@
             i))
         (get-in request [:helmsman :routing-set])))))
 
+(defn wrap-uri-params
+  [request]
+  (assoc-in
+    request
+    [:helmsman :request-path-params]
+    (uri/extract-path-params
+      (get-in request [:helmsman :request-path])
+      (get-in request [:helmsman :current-route :path-param-positions]))))
+
 (defn default-wrappers
   "Makes changes to the request to make routing easier and to include data that
   could be useful to the developer, such as creating relative URIs, or even
@@ -81,8 +90,7 @@
       wrap-signature
       (wrap-routing-set routing-set)
       wrap-current-route
-      wrap-uri-params
-      ))
+      wrap-uri-params))
 
 (defn get-in-request
   [request key-or-keys]
