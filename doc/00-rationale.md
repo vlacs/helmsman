@@ -84,5 +84,5 @@ locations. You can still use named parameters in URIs such as
 ```"/this/*/:item/set-id/:id```. The upside to this is that it enforces a
 stricter URI convention that encourages specfic URIs over ambiguous ones.
 
-[1: Defining routes](https://github.com/vlacs/helmsman/tree/dev/02-requests.md)
+[1: Defining routes](https://github.com/vlacs/helmsman/blob/dev/doc/02-requests.md)
 

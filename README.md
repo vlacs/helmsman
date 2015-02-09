@@ -10,11 +10,11 @@
 I'm going to break Helmsman down into sections that describe different parts of
 the project.
 - [Preface: The rationale for
-  Helmsman](https://github.com/vlacs/helmsman/tree/dev/00-rationale.md).
+  Helmsman](https://github.com/vlacs/helmsman/blob/dev/doc/00-rationale.md).
 - [1: Defining
-  routes](https://github.com/vlacs/helmsman/tree/dev/01-defining-routes.md)
+  routes](https://github.com/vlacs/helmsman/blob/dev/doc/01-defining-routes.md)
 - [2: Helmsman and the Ring
-  request](https://github.com/vlacs/helmsman/tree/dev/02-requests.md)
+  request](https://github.com/vlacs/helmsman/blob/dev/doc/02-requests.md)
 
 
 ## License

@@ -157,5 +157,5 @@ never be touched by cookies.
 ## Files and resources
 Working on it. This is not currently supported as of ```1.0.0-alpha1```.
 
-[2: Helmsman and the Ring request](https://github.com/vlacs/helmsman/tree/dev/02-requests.md)
+[2: Helmsman and the Ring request](https://github.com/vlacs/helmsman/blob/dev/doc/02-requests.md)
 
