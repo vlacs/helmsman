@@ -20,7 +20,7 @@ of the Ring request will have a map with the following keys:
   makes for any given route.
 - ```:current-route``` is a Clojure map that represents a single routes, the
   route the current request resolved to. This route item is from the
-  ```:routing-set```.
+  ```:routing-set``` .
 - ```:request-path-params``` is a Clojure map the resolves path parameters in
   a definition to their actual values from a request. No parameters will
   result in an empty map.
