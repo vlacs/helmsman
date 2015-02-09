@@ -154,6 +154,28 @@ two. The middleware is also contained to the current context and is only applied
 to anything after or below it, so the ```something-extra``` route I added would
 never be touched by cookies.
 
+## Metadata
+There are times (at least for me) where data needed to me tied to a route, so
+I could reference it from any other handler. The reason behind this was mainly
+to be able to look up routes to create URIs to them. A standard meta-data key in
+Helmsman is simply ```:id```, but you can attach any data you want to a route by
+using your standard Clojure meta-data reader macro.
+```clojure
+[[ring.middleware.cookies/wrap-cookies]
+ ^{:id :home}
+ [:get "path" default-response
+  ^{:id :one}
+  [:get "one" default-response]
+  ^{:id two :auth-required? true}
+  [:get "two" default-response]
+  ^{:some-data [:a :b :c :d]}
+  [:get "three" default-response]]]
+```
+
+This meta-data gets tied to the route in both the request and the routing-set
+that gets created from the definition and can be used either inside or outside
+of a Ring request.
+
 ## Files and resources
 Working on it. This is not currently supported as of ```1.0.0-alpha1```.
 
