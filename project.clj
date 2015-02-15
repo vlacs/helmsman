@@ -17,5 +17,6 @@
   :source-paths ["src" "src/main/clojure"]
   :profiles {:dev {:source-paths ["dev"]
                    :dependencies [[org.clojure/tools.nrepl "0.2.7"]
-                                  [ring/ring-mock "0.2.0"]]}})
+                                  [ring/ring-mock "0.2.0"]
+                                  [org.clojure/test.check "0.7.0"]]}})
 

@@ -1,32 +1,65 @@
 (ns helmsman.uri
   (:require [clojure.string :as string]))
 
-(defn strip-leading-slashes
-  "Removes all leading slashes from the uri string."
-  [uri-string]
-  (string/replace uri-string #"^/+" ""))
-
-(defn strip-trailing-slashes
-  "Removes all trailing slashes from the uri string."
-  [uri-string]
-  (string/replace uri-string #"/+$" ""))
-
-(defn singular-slashes
-  "Replaces more than one consecutive slashes with a single one."
-  [uri-string]
-  (string/replace uri-string #"/+" "/"))
-
-(defn trim-slashes
+(defn clean-uri-string
   "Removes all slashes from the beginning and end of the uri string."
   [uri-string]
-  (-> uri-string
-      strip-leading-slashes
-      strip-trailing-slashes))
+  ;;; TODO: Convert this to a non-regex version.
+  (apply
+    str
+    (let [uri-vector (vec uri-string)
+          uri-size (count uri-vector)]
+      (loop
+        [new-segment? false
+         new-string []
+         pos 0]
+        (let [empty-new-string? (empty? new-string)
+              char-current (get uri-vector pos)
+              char-current-is-slash? (= char-current \/)]
+          (if (>= pos uri-size)
+            new-string
+            (recur
+              char-current-is-slash?
+              (if empty-new-string?
+                (if char-current-is-slash?
+                  new-string
+                  (conj new-string char-current))
+                (if new-segment?
+                  (if (not char-current-is-slash?)
+                    (conj new-string \/ char-current)
+                    new-string)
+                  (if char-current-is-slash?
+                    new-string
+                    (conj new-string char-current))))
+              (inc pos))))))))
+
+(defn uri-split-slashes
+  [cleaned-uri-string]
+  (let [uri-vector (vec cleaned-uri-string)
+        uri-size (count cleaned-uri-string)]
+    (loop
+      [current-segment []
+       uri-segments []
+       pos 0]
+      (let [char-current (get uri-vector pos)
+            char-current-is-slash? (= char-current \/)]
+        (if (>= pos uri-size)
+          (if (empty? current-segment)
+            uri-segments
+            (conj uri-segments (apply str current-segment)))
+          (recur
+            (if char-current-is-slash?
+              []
+              (conj current-segment char-current))
+            (if char-current-is-slash?
+              (conj uri-segments (apply str current-segment))
+              uri-segments)
+            (inc pos)))))))
 
 (defn variable-string?
   [identifier]
   (or (when (string? identifier)
-        (= (str (first identifier)) ":"))
+        (= (first identifier) \:))
       (keyword? identifier)))
 
 (defn keywordize
@@ -44,24 +77,20 @@
   "Creates a flat URI path to be used for navigation."
   [uri-string]
   (transform-keywords
-    (string/split
-      (-> uri-string
-          trim-slashes
-          singular-slashes)
-      #"/+")))
+    (uri-split-slashes
+      (clean-uri-string uri-string))))
 
 (defn normalize-path
   "Converts a multi-level uri-path vector into a single level vector and
   removes any empty items. This is useful for path navigation and uri
   generation."
   [uri-path]
-  (vec 
-    (filter 
-      (fn normalize-path-filter-fn
-        [i]
-        (if (keyword? i)
-         true
-         (not (empty? i)))) (flatten uri-path))))
+  (filterv 
+    (fn normalize-path-filter-fn
+      [i]
+      (if (keyword? i)
+        true
+        (not (empty? i)))) (flatten uri-path)))
 
 (defn sub-path-item
   [sub-map i]
