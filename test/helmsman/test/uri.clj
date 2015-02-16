@@ -33,5 +33,6 @@
       (= item s))))
 
 (t/deftest uri-testing
-  (t/is (tc/quick-check 100 uri-path-flat-normalize-property))
-  (t/is (tc/quick-check 100 uri-assemble-parse-property)))
+  (t/is (:result (tc/quick-check 100 uri-path-flat-normalize-property)))
+  (t/is (:result (tc/quick-check 100 uri-assemble-parse-property))))
+
