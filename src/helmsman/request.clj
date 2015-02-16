@@ -67,7 +67,7 @@
               ((:path-matcher-fn i) request-path)
               (or
                 (= (:request-method request) (:http-method i))
-                (= (:request-method request) :any)))
+                (= (:http-method i) :any)))
             i))
         (get-in request [:helmsman :routing-set])))))
 
