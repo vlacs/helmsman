@@ -1,4 +1,4 @@
-(defproject org.vlacs/helmsman "1.0.0-alpha3"
+(defproject org.vlacs/helmsman "1.0.0-alpha4-SNAPSHOT"
   :description "This is a library for describing the structure of a web appliction.
                This way, we have uris and data associated directly with routes.
                This is nice for generating navigation or applying middleware to
