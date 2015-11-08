@@ -79,7 +79,7 @@
 (defn make-route-fn
   [handler-fn middleware-list]
   (loop [handler-state handler-fn
-         middlewares middleware-list]
+         middlewares (reverse middleware-list)]
     (if (empty? middlewares)
       handler-state
       (let [this-middleware (first middlewares)
