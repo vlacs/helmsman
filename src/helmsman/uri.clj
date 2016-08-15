@@ -59,9 +59,10 @@
 
 (defn variable-string?
   [identifier]
-  (or (when (and (string? identifier) (not (empty? identifier)))
-        (= (char (first identifier)) \:))
-      (keyword? identifier)))
+  (or 
+    (keyword? identifier)  
+    (when (and (string? identifier) (not (empty? identifier)))
+      (= (char (first identifier)) \:))))
 
 (defn keywordize
   [^String i]
@@ -96,7 +97,7 @@
 
 (defn sub-path-item
   [sub-map i]
-  (if (and (not (empty? i)) (variable-string? i))
+  (if (variable-string? i)
     (get sub-map
          (if (not (keyword? i))
            (keywordize i) i) i) i))
