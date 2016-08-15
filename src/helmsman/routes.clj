@@ -44,18 +44,27 @@
 (defn route?
   "Returns true if the method is :any or a specific http method."
   [method]
-  (or (http-method? method)
-      (any-http-method? method)))
- 
+  (or
+    (set? method)
+    (http-method? method)
+    (any-http-method? method)))
+
 (defn context?
   "Checks the argument to see if it's a :context"
   [method]
-  (= method :context))
+  (or
+    (vector? method)
+    (= method :context)
+    (string? method)))
  
 (defn middleware?
   "Any method that is a fn is a middleware. Returns true if the agument is a fn."
   [method]
-  (fn? method))
+  (or
+    (and
+      (var? method)
+      (fn? (var-get method)))
+    (fn? method)))
 
 (defn resources?
   "Checks to see if the argument is :static."
@@ -71,4 +80,23 @@
   [method]
   (= method :not-found))
 
+(defn stanza-min-length
+  [item]
+  (let [[hpi spi & remaining] item]
+    (cond
+      (middleware? hpi) (count item)
+      (context? hpi) (cond 
+                        (keyword? hpi) (if (string? spi) 2 1)
+                        (string? hpi) 1
+                        (vector? hpi) 0)
+      (route? hpi) (cond
+                     (string? spi) 3
+                     (fn? (if (var? spi) (var-get spi) spi)) 2))))
 
+(defn extract-path
+  [[hpi spi & _]]
+  (cond 
+    (string? hpi) hpi
+    (and (not (middleware? hpi)) (string? spi)) spi
+    :default ""))
+ 

@@ -17,17 +17,16 @@
           route? (routes/route? hpi)
           middleware? (routes/middleware? hpi)
           length (count item)
-          min-length
-          (get
-            routes/keyword-route-length
-            hpi length)]
+          min-length (routes/stanza-min-length item)]
       {:context? context?
        :route? route?
        :http-method (when route? hpi)
        :middleware? middleware?
-       :path (when (contains? routes/path-bearing-keywords hpi)
-               (uri/path spi))
-       :route-fn (when route? (nth item 2))
+       :path (when (not middleware?)
+               (uri/path
+                 (routes/extract-path item)))
+       :route-fn (when route?
+                   (nth item (- min-length 1)))
        :raw-item item
        :meta (meta item)
        :sub-definition 
@@ -74,9 +73,9 @@
   [constant-path]
   (fn [other-path]
     (let [[x y] (uri/path-divergence constant-path other-path)]
-      (or
-        (empty? (keep not-empty x))
-        (empty? (keep not-empty y))))))
+      (and
+        (empty? (filter #(or (keyword? %) (not-empty %)) x))
+        (empty? (filter #(or (keyword? %) (not-empty %)) y))))))
 
 (defn make-route-fn
   [handler-fn middleware-list]
@@ -96,7 +95,9 @@
 
 (defn make-route
   [http-method path handler-fn middleware meta-data]
-  (let [real-path (uri/normalize-path (reverse path))
+  (let [real-path (filterv
+                    #(or (keyword? %) (not (empty? %)))
+                    (uri/normalize-path (reverse path)))
         path-param-positions (uri/path-param-positions real-path)
         signature (uri/path->signature real-path)
         middleware (ordered-middleware middleware)]
@@ -175,7 +176,7 @@
   (set
     (loop
       [compiled-routes (list)
-       cl-upcoming-routes definition
+       cl-upcoming-routes [definition]
        stacked-routes (list)
        stacked-paths (list)
        stacked-middleware (list (list))]

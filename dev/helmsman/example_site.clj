@@ -102,6 +102,21 @@
    [:get "/debugging/:a/:b" debug-page]
    ])
 
+(defn a-handler [req] {:body "Hi!"})
+
+(def test-routes
+  [["a"
+   [#{:get :post} a-handler]
+   [:post "b" a-handler]
+   [#{:get :post} "foo" a-handler]]]
+  )
+
+(comment
+  (pprint
+    (router/destruct-definition test-routes))
+
+  )
+
 (defn start-server
   [port definition]
   (ring.adapter.jetty/run-jetty

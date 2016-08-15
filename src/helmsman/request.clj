@@ -66,6 +66,8 @@
             (and
               ((:path-matcher-fn i) request-path)
               (or
+                (and (set? (:http-method i))
+                     ((:http-method i) (:request-method)))
                 (= (:request-method request) (:http-method i))
                 (= (:http-method i) :any)))
             i))

@@ -39,26 +39,27 @@
     [^String cleaned-uri-string]
    (let [uri-vector (vec cleaned-uri-string)
          uri-size (count cleaned-uri-string)]
-     (loop
-       [current-segment []
-        uri-segments []
-        pos 0]
-       (let [char-current (char (get uri-vector pos \0))
-             char-current-is-slash? (= char-current \/)]
-         (if (>= pos uri-size)
-           (conj uri-segments (apply str current-segment))
-           (recur
-             (if char-current-is-slash?
-               []
-               (conj current-segment char-current))
-             (if char-current-is-slash?
-               (conj uri-segments (apply str current-segment))
-               uri-segments)
-             (inc pos))))))))
+     (if (<= uri-size 0) []
+       (loop
+         [current-segment []
+          uri-segments []
+          pos 0]
+         (let [char-current (char (get uri-vector pos \0))
+               char-current-is-slash? (= char-current \/)]
+           (if (>= pos uri-size)
+             (conj uri-segments (apply str current-segment))
+             (recur
+               (if char-current-is-slash?
+                 []
+                 (conj current-segment char-current))
+               (if char-current-is-slash?
+                 (conj uri-segments (apply str current-segment))
+                 uri-segments)
+               (inc pos)))))))))
 
 (defn variable-string?
   [identifier]
-  (or (when (string? identifier)
+  (or (when (and (string? identifier) (not (empty? identifier)))
         (= (char (first identifier)) \:))
       (keyword? identifier)))
 
@@ -91,8 +92,6 @@
       (fn normalize-path-filter-fn
         [i]
         (or (keyword? i) (string? i)))
-      ;;; I can't remember if there is a reason why this is being flattened.
-      ;;; Consider removing it if it's not important.
       (flatten uri-path))))
 
 (defn sub-path-item
@@ -114,16 +113,14 @@
     str
     (interpose
       "/"
-      (filter
-        #(not (empty? %))
-        (process-path-args
-          (normalize-path uri-path)
-          (if (empty? args)
+      (process-path-args
+        (normalize-path uri-path)
+        (if (empty? args)
+          {}
+          (apply
+            assoc
             {}
-            (apply
-              assoc
-              {}
-              args)))))))
+            args))))))
 
 (defn common-path
   [uri-one uri-two]
