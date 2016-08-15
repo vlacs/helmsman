@@ -15,7 +15,7 @@
   to another route based on a meta-data id."
   [request destination-id]
   (uri/relative-uri
-    (:path (req/get-current-route request))
+    (get-in request [:helmsman :request-path])
     (:path (get-route-by-id request destination-id))))
  
 (defn assemble-relative-uri
