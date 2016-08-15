@@ -73,8 +73,10 @@
 (defn make-path-matcher-fn
   [constant-path]
   (fn [other-path]
-    (let [pd (uri/path-divergence constant-path other-path)]
-      (and (empty? (first pd)) (empty? (second pd))))))
+    (let [[x y] (uri/path-divergence constant-path other-path)]
+      (or
+        (empty? (keep not-empty x))
+        (empty? (keep not-empty y))))))
 
 (defn make-route-fn
   [handler-fn middleware-list]

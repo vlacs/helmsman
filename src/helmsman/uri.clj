@@ -17,7 +17,8 @@
                char-current (char (get uri-vector pos \0))
                char-current-is-slash? (= char-current \/)]
            (if (>= pos uri-size)
-             new-string
+             (if new-segment?
+               (conj new-string "/") new-string)
              (recur
                char-current-is-slash?
                (if empty-new-string?
@@ -45,9 +46,7 @@
        (let [char-current (char (get uri-vector pos \0))
              char-current-is-slash? (= char-current \/)]
          (if (>= pos uri-size)
-           (if (empty? current-segment)
-             uri-segments
-             (conj uri-segments (apply str current-segment)))
+           (conj uri-segments (apply str current-segment))
            (recur
              (if char-current-is-slash?
                []
@@ -91,13 +90,14 @@
     (filterv 
       (fn normalize-path-filter-fn
         [i]
-        (if (keyword? i)
-          true
-          (not (empty? i)))) (flatten uri-path))))
+        (or (keyword? i) (string? i)))
+      ;;; I can't remember if there is a reason why this is being flattened.
+      ;;; Consider removing it if it's not important.
+      (flatten uri-path))))
 
 (defn sub-path-item
   [sub-map i]
-  (if (variable-string? i)
+  (if (and (not (empty? i)) (variable-string? i))
     (get sub-map
          (if (not (keyword? i))
            (keywordize i) i) i) i))
@@ -114,14 +114,16 @@
     str
     (interpose
       "/"
-      (process-path-args
-        (normalize-path uri-path)
-        (if (empty? args)
-          {}
-          (apply
-            assoc
+      (filter
+        #(not (empty? %))
+        (process-path-args
+          (normalize-path uri-path)
+          (if (empty? args)
             {}
-            args))))))
+            (apply
+              assoc
+              {}
+              args)))))))
 
 (defn common-path
   [uri-one uri-two]
