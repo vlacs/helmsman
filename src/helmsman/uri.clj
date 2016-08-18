@@ -147,8 +147,8 @@
     [one (normalize-path uri-one)
      two (normalize-path uri-two)
      last-segment nil]
-    (let [[s1 la1 & r1] one
-          [s2 la2 & r2] two]
+    (let [[s1 & _] one
+          [s2 & _] two]
       (if
         (or
           (and
