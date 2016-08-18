@@ -147,8 +147,8 @@
     [one (normalize-path uri-one)
      two (normalize-path uri-two)
      last-segment nil]
-    (let [s1 (first one)
-          s2 (first two)]
+    (let [[s1 la1 & r1] one
+          [s2 la2 & r2] two]
       (if
         (or
           (and
@@ -160,24 +160,70 @@
         [one two] 
         (recur
           (vec (rest one))
-          (vec (rest two))
+          (vec
+            (if (= s1 "")
+              two (rest two)))
           s2)))))
 
+(defn has-equity?
+  [s1 s2]
+  (or
+    (keyword? s1)
+    (keyword? s2)
+    (= s1 s2)))
+
+(defn empty-segment?
+  [s]
+  (= s ""))
+
+(comment
+  
+  (do
+    (def p1 ["admin" ""])
+    (def p2 ["admin" "roles" "12345"])
+    (def p3 ["admin"])
+    (def p4 ["admin" "roles" "12345" ""])
+    (def p5 ["admin" "roles"])
+    (def p6 ["admin" "schema" "777"])
+    )
+
+  (path-divergence p1 p2)
+  (path-relative p1 p2)
+  (path-relative p3 p2)
+  (path-relative p4 p3)
+  (path-relative p2 p3)
+  (path-relative p5 p3)
+  (path-relative p3 p3)
+  (path-relative p1 p3)
+  (path-relative p2 p6)
+  )
+
 (defn relative-uri
-  [from-path to-path]
-  (let [divergence (path-divergence from-path to-path)
-        common (common-path from-path to-path)
-        u-levels (- (count (first divergence)) 1)]
-    (vec
-      (concat
-        (if (<= u-levels 0)
+  [path-from path-to]
+  (vec
+    (loop [common (list)
+           [last-p1 last-p2] [nil nil]
+           pf (normalize-path path-from)
+           pt (normalize-path path-to)]
+      (let
+        [[p1 & r1] pf [p2 & r2] pt
+         equity (has-equity? p1 p2)
+         empty-segment (empty-segment? p1)
+         had-empty-segment (empty-segment? last-p1)
+         had-equity (has-equity? last-p1 last-p2)]
+        (if (not (and
+                   (not (nil? p1))
+                   (not (nil? p2))
+                   (or equity empty-segment)))
           (concat
-            ["."]
-            (if (and (= u-levels -1)
-                     (> (count common) 0))
-              [(last common)] []))
-          (vec (repeat u-levels "..")))
-        (second divergence)))))
+            (when (> (count pf) 0) (repeat (count pf) ".."))
+            (when (not had-empty-segment)
+              (list (first common)))
+            (when (not (nil? pt)) pt))
+          (recur
+            (if equity (conj common p1) common)
+            [p1 p2]
+            r1 (if empty-segment (cons p2 r2) r2)))))))
 
 (defn signature-map-fn
   [i]
