@@ -3,6 +3,7 @@
 
 ## Dependencies?!
 Lets get this out of the way.
+
 [![Clojars Project](http://clojars.org/org.vlacs/helmsman/latest-version.svg)]
 (http://clojars.org/org.vlacs/helmsman)
 
