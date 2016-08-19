@@ -4,8 +4,7 @@
 ## Dependencies?!
 Lets get this out of the way.
 
-[![Clojars Project](http://clojars.org/org.vlacs/helmsman/latest-version.svg)]
-(http://clojars.org/org.vlacs/helmsman)
+[![Clojars Project](https://img.shields.io/clojars/v/org.vlacs/helmsman.svg)](https://clojars.org/org.vlacs/helmsman)
 
 ## What is Helmsman?
 Helmsman is a Ring compliant HTTP routing tool that leverages routes by keeping
