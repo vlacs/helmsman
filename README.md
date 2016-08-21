@@ -72,7 +72,7 @@ when the routes are compiled. An example of this might look as follows:
 ```clojure
 [:get home-page-handler
  [[authorization-fn :require-login]
-  ["my-info
+  ["my-info"
    [:get my-info-handler]
    [:post update-my-info]]
   [[require-roles #{:admin}]
@@ -98,7 +98,7 @@ uniquely identify a route.
    :nav-lists #{:my-navs}
  [:get "about" handler-fn]
  ^{:id :save-my-routes
-   ;nav-lists #{:my-navs}}
+   :nav-lists #{:my-navs}}
  [:post "save" save-handler-fn]]
 ```
 
@@ -158,9 +158,9 @@ So long as you have the request, you can use the following to create
 relative URI paths:
 ```clojure
 (require ['helmsman.navigation :refer ['get-relative-path 'assemble-relative-uri]])
-(helmsman.navigation/get-relative-path request :home)
-(helmsman.navigation/get-relative-path request :profile)
-(helmsman.navigation/get-relative-path request :reset-password)
+(get-relative-path request :home)
+(get-relative-path request :profile)
+(get-relative-path request :reset-password)
 ```
 
 Depending on ```:request-path```, Helmsman automatically generates a relative
