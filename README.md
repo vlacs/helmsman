@@ -17,18 +17,18 @@ hostname for linking.
 
 ## Stanzas
 Helmsman can define routes several different ways but, there are three different
-kinds of mechanisms that Helmsman uses to construct then. You have **routes**,
+kinds of mechanisms that Helmsman uses to construct them. You have **routes**,
 **contexts**, and **middlewares**. All of these contructs have syntax which are
 dubbed **Stanzas** where are merely vectors.
 
 ### Contexts
-...are groups that serve certain kinds of web requests. These are not
-routes but, have the benefit being able to clump routes together for the
-purposes of common paths or for common middleware. Providing paths is not
-a requirement.
+A context is a group that serve certain kinds of web requests of your choosing.
+These are not routes but, have the benefit being able to clump routes together
+for the purposes of common paths or for common middleware. Providing paths is
+not a requirement for contexts where it was while Helmsman was in alpha.
 
 Where ```...`` represents additional, nested routes, middleware, or contexts,
-the following would be considered **contexts**.
+the following would be considered a **context**.
 ```clojure
 [...]
 ["user/about" ...]
@@ -37,17 +37,17 @@ the following would be considered **contexts**.
 ```
 
 ### Routes
-...are HTTP endpoints but, have all of the same properties as contexts which
-allows routes to be nested inside of eachother based on common paths.
+A route is a HTTP endpoint but, has all of the same properties as a context
+which allows routes to be nested inside of each other based on common paths.
 
 Routes always describe an HTTP method, but optionally a path.
 ```clojure
 [:get some-handler-fn]
-[:get "my-path" some-handler-fn]
+[:get "profile" some-handler-fn]
 ```
 
-Routes can also encompass several, or all HTTP methods by either providing a set
-of HTTP methods or a single ```:any``` keyword.
+Routes can also encompass several HTTP method at once by providing a set
+of HTTP methods. The ```:any``` keyword matches all HTTP methods.
 ```clojure
 [#{:get :post :put} some-handler-fn]
 [:any some-handler-fn]
@@ -61,13 +61,14 @@ Routes are also contexts which can have routes under them.
 ```
 
 ### Middleware
-...are the same kind of Middleware you know of in the vanilla Ring world. These
-are functions that take in a handler plus any number of arguements which produce
-functions which take a Ring request and does whatever it wants with it. Helmsman
-puts all of this together into a prepared function call when a web request
-that matches a particular path comes in. Middleware Stanzas describe the
-function and the arguments following the handler function which gets provided
-when the routes are compiled. An example of this might look as follows:
+Middleware are functions that sit between the the request coming in and the
+handler. These are functions that take in a handler plus any number of arguements
+which produce a function which take a single argument, a Ring request, and does
+whatever it wants with it. Helmsman puts all of this together into a prepared
+function call when a web request that matches a particular path comes in.
+Middleware Stanzas describe the function and the arguments following the
+handler function which gets provided when the routes are compiled. An example
+of this might look as follows:
 
 ```clojure
 [:get home-page-handler
@@ -79,10 +80,6 @@ when the routes are compiled. An example of this might look as follows:
    [:get "admin" admin-handler
    ...]]]]
 ```
-
-There three mechanisms are the building block of all routes but, there is one
-little extra feature that doesn't directly impact routing but, allows you to
-impact the data available about routes when a request comes in.
 
 ### Metadata
 Just like regular Clojure metadata, this information is not part of the route
@@ -167,9 +164,9 @@ Depending on ```:request-path```, Helmsman automatically generates a relative
 URI to the route that has the provided id. There are other functions within
 ```helmsman.navigation``` and ```helmsman.request``` to get routes in different
 ways. ```helmsman.uri``` provides functionality for creating string URIs to be
-used.
-
-TODO: Keep working on the README.
+used. The ```helmsman.navigation/assemble-relative-uri``` function is used to
+contstruct a URL that may have keywords in it, which can be provided to the
+function as substitutions.
 
 ## License
 
